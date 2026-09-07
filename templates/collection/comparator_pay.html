@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} pay · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'collection:comparators' %}">Comparators</a> / {{ org.name }}{% endblock %}
+{% block heading %}{{ org.name }} — salary table{% endblock %}
+{% block content %}
+<nav class="file-nav" aria-label="Comparator">
+  {% if can_edit %}<a href="{% url 'collection:comparator_edit' org.pk %}">Details</a>{% endif %}
+  <a class="on" href="{% url 'collection:comparator_pay' org.pk %}">Pay table</a>
+  <a href="{% url 'collection:comparator_benefits' org.pk %}">Benefits</a>
+</nav>
+<p class="muted">{{ period }} · Same job catalogue as every county, so medians line up in analysis. Tick N/A if this organisation does not have the job.</p>
+<div class="card">
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    <div class="table-wrap scroll-y">
+      <table class="data">
+        <thead>
+          <tr>
+            <th>Job</th><th>Group</th><th>N/A</th>
+            <th>Min</th><th>Max</th><th>Median</th>
+            <th>House</th><th>Commuter</th><th>Airtime</th><th>Other</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for job, form in rows %}
+          <tr>
+            <td><strong>{{ job.title }}</strong>{{ form.errors }}</td>
+            <td>{{ job.job_group }}</td>
+            <td>{{ form.not_applicable }}</td>
+            <td class="num">{{ form.min_basic }}</td>
+            <td class="num">{{ form.max_basic }}</td>
+            <td class="num">{{ form.median_basic }}</td>
+            <td class="num">{{ form.house_allowance }}</td>
+            <td class="num">{{ form.commuter_allowance }}</td>
+            <td class="num">{{ form.airtime }}</td>
+            <td class="num">{{ form.other_allowances }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="actions sticky-actions">
+      <button class="btn gold" type="submit" {% if not can_edit %}disabled{% endif %}>Save comparator pay</button>
+      <a class="btn ghost" href="{% url 'collection:comparators' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

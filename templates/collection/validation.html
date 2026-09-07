@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Validation · {{ case.county.name }}{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Validation{% endblock %}
+{% block heading %}Data quality & validation{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="validation" %}
+<p class="muted">Set a status on every item ({{ progress.validation }}% filled). An empty checklist cannot be used to mark the county file as validated.</p>
+<div class="card">
+  <form method="post">
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <table class="data">
+      <thead><tr><th>Validation item</th><th>Status</th><th>Comments / follow-up</th></tr></thead>
+      <tbody>
+      {% for form in formset %}
+        <tr>
+          <td>{{ form.id }}{{ form.instance.item.name }}</td>
+          <td>{{ form.status }}</td>
+          <td>{{ form.comments }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    <div class="actions" style="margin-top:1rem">
+      <button class="btn gold" type="submit">Save checklist</button>
+      <a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Back to file</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

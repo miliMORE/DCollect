@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}Audit trail · DCollect{% endblock %}
+{% block crumb %}Administration{% endblock %}
+{% block heading %}Audit trail{% endblock %}
+{% block content %}
+<p class="muted">
+  A complete record of what every user did, with the time, the account, the county file where it applies, and the network address.
+  This page is visible only to platform administrators. The Activity list on a county file remains the working history for that file.
+</p>
+
+<div class="card">
+  <form method="get" class="audit-filters">
+    <div class="field">
+      <label for="id_q">Search</label>
+      <input class="input" id="id_q" name="q" value="{{ q }}" placeholder="Name, action, county, IP">
+    </div>
+    <div class="field">
+      <label for="id_role">Role</label>
+      <select class="input" id="id_role" name="role">
+        <option value="">All roles</option>
+        {% for value, label in roles %}
+          <option value="{{ value }}" {% if role == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="id_category">Area</label>
+      <select class="input" id="id_category" name="category">
+        <option value="">All areas</option>
+        {% for value, label in categories %}
+          <option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="id_county">County</label>
+      <select class="input" id="id_county" name="county">
+        <option value="">All counties</option>
+        {% for c in counties %}
+          <option value="{{ c.pk }}" {% if county_id == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="id_outcome">Outcome</label>
+      <select class="input" id="id_outcome" name="outcome">
+        <option value="">All</option>
+        <option value="success" {% if outcome == "success" %}selected{% endif %}>Succeeded</option>
+        <option value="failure" {% if outcome == "failure" %}selected{% endif %}>Failed</option>
+      </select>
+    </div>
+    <div class="field">
+      <label for="id_from">From</label>
+      <input class="input" id="id_from" type="date" name="from" value="{{ date_from }}">
+    </div>
+    <div class="field">
+      <label for="id_to">To</label>
+      <input class="input" id="id_to" type="date" name="to" value="{{ date_to }}">
+    </div>
+    <div class="field audit-filter-actions">
+      <label>&nbsp;</label>
+      <div class="actions">
+        <button class="btn gold" type="submit">Filter</button>
+        <a class="btn ghost" href="{% url 'accounts:audit' %}">Clear</a>
+      </div>
+    </div>
+  </form>
+</div>
+
+<div class="card">
+  <div class="split">
+    <p class="tiny">{{ total }} event{{ total|pluralize }} · times are Africa/Nairobi</p>
+    <a class="btn ghost" href="{% url 'accounts:audit_export' %}{% if querystring %}?{{ querystring }}{% endif %}">Download CSV</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data audit">
+      <thead>
+        <tr>
+          <th>When</th>
+          <th>User</th>
+          <th>Role</th>
+          <th>Action</th>
+          <th>County / file</th>
+          <th>Outcome</th>
+          <th>IP address</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in page %}
+        <tr>
+          <td class="mono nowrap">
+            {{ row.created_at|date:"d M Y" }}<br>
+            <span class="tiny">{{ row.created_at|date:"H:i:s" }}</span>
+          </td>
+          <td>
+            <strong>{{ row.actor_name|default:row.actor_username|default:"Unknown" }}</strong>
+            {% if row.actor_username %}<div class="tiny">{{ row.actor_username }}</div>{% endif %}
+          </td>
+          <td>{{ row.actor_role_label }}</td>
+          <td>
+            {{ row.summary }}
+            {% if row.detail %}<div class="tiny">{{ row.detail }}</div>{% endif %}
+          </td>
+          <td>{% if row.target_label %}{{ row.target_label }}{% elif row.county %}{{ row.county.name }}{% else %}—{% endif %}</td>
+          <td><span class="badge {% if row.outcome == 'failure' %}req{% else %}validated{% endif %}">{{ row.get_outcome_display }}</span></td>
+          <td class="mono tiny">{{ row.ip_address|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7">No audit events match these filters yet. Events appear as people sign in and work.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% if page.has_other_pages %}
+    <div class="actions" style="margin-top:1rem">
+      {% if page.has_previous %}
+        <a class="btn ghost" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.previous_page_number }}">Previous</a>
+      {% endif %}
+      <span class="tiny">Page {{ page.number }} of {{ page.paginator.num_pages }}</span>
+      {% if page.has_next %}
+        <a class="btn ghost" href="?{% if querystring %}{{ querystring }}&amp;{% endif %}page={{ page.next_page_number }}">Next</a>
+      {% endif %}
+    </div>
+  {% endif %}
+</div>
+{% endblock %}

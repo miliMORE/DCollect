@@ -1,0 +1,13 @@
+<nav class="file-nav" aria-label="County file">
+  <a class="{% if module == 'hub' %}on{% endif %}" href="{% url 'collection:case_hub' case.pk %}">Overview</a>
+  <a class="{% if module == 'questionnaire' %}on{% endif %}" href="{% url 'collection:questionnaire' case.pk %}">Questionnaire</a>
+  <a class="{% if module == 'jobs' %}on{% endif %}" href="{% url 'collection:jobs' case.pk %}">Jobs</a>
+  <a class="{% if module == 'benefits' %}on{% endif %}" href="{% url 'collection:benefits' case.pk %}">Benefits</a>
+  <a class="{% if module == 'documents' %}on{% endif %}" href="{% url 'collection:documents' case.pk %}">Documents</a>
+  <a class="{% if module == 'certify' %}on{% endif %}" href="{% url 'collection:certify' case.pk %}">Certify</a>
+  <a class="{% if module == 'clarifications' %}on{% endif %}" href="{% url 'collection:clarifications' case.pk %}">Clarifications</a>
+  <a class="{% if module == 'individuals' %}on{% endif %}" href="{% url 'collection:individuals' case.pk %}">Individual responses</a>
+  {% if user.can_review %}
+    <a class="{% if module == 'validation' %}on{% endif %}" href="{% url 'collection:validation' case.pk %}">Validation</a>
+  {% endif %}
+</nav>

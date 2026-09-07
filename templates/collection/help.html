@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}What I need to do · DCollect{% endblock %}
+{% block crumb %}Support{% endblock %}
+{% block heading %}What you need to do{% endblock %}
+{% block content %}
+<div class="card help-block">
+  <p>Sign in with the account issued to you. Work only on the pages in the left menu. If a page is missing, that is because it is not part of your role.</p>
+</div>
+
+{% if role == 'admin' or user.is_admin_role %}
+<div class="card help-block">
+  <h2>Administrator</h2>
+  <p>You prepare the survey and keep it moving. Counties cannot start until files and logins exist.</p>
+  <ol class="checklist">
+    <li>Open <strong>Variables &amp; settings</strong>. Confirm the survey title, support email, confidentiality text, maximum upload size and the active survey period.</li>
+    <li>Under catalogues, check counties, benchmark jobs, benefits, document types and dropdown lists. If a job is missing, add it here before counties start filling. Do not ask them to type their own job titles.</li>
+    <li>Open <strong>Forms &amp; questions</strong>. Mark which questionnaire items, jobs, benefits and documents are required. Add extra questions to a section if the standard form is not enough. Counties see a Required mark on those items.</li>
+    <li>On <strong>Comparators</strong>, open Details and delete an organisation if it should not stay in the market set. That removes its stored pay and benefits. County files are not touched.</li>
+    <li>On Variables &amp; settings, open a file for <strong>selected counties</strong>, or for every county.</li>
+    <li>Go to <strong>Users</strong>. Create one county respondent for each county, or use <strong>Create missing county logins</strong>. Add the consultants who will review files and the analysts who will download reports.</li>
+    <li>On Variables &amp; settings or County files, open a file for selected counties, or for every county. Safe to click again — existing files are left alone.</li>
+    <li>Open a county file if you need to assign a named consultant.</li>
+    <li>Use the dashboard to see drafts, submissions and clarifications. When a file is validated, the analysts can use Analysis and Reports.</li>
+    <li>Open <strong>Audit trail</strong> to see what every user did, with the time, the account, the county file and the network address — including account edits, deactivations, deletions and password changes. Collection administrators cannot open this page. The Activity list on a county file is still the working history for that file only.</li>
+    <li>Open <strong>Data administration</strong> to delete test data for one county or one user, or to reset all collected answers. Catalogues and logins stay. Deleting a login under Users does not remove answers they already entered, and their audit rows stay.</li>
+    <li>Open <strong>Staff survey links</strong>. Copy the Kisumu link (or any county) and send it to people who work there but do not have a county login. Their forms land on that county’s <strong>Individual responses</strong> page.</li>
+    <li>Download the full <a href="{% url 'accounts:user_manual' %}">user manual (PDF)</a> from the left menu. It includes navigation steps and screen figures for every role.</li>
+  </ol>
+</div>
+{% endif %}
+
+{% if role == 'county' %}
+<div class="card help-block">
+  <h2>County respondent</h2>
+  <p>You complete the file for <strong>{% if user.county %}{{ user.county.name }}{% else %}your county{% endif %}</strong> only. Keep the salary structure and the allowance and benefits schedules next to you.</p>
+  <ol class="checklist">
+    <li>On the dashboard, open <strong>My county file</strong>. If a <strong>Next step</strong> box is showing, start there.</li>
+    <li><strong>Questionnaire</strong> — work through A to J. Save a section before you leave it. Staff totals on section B add themselves. County and survey period are already filled. In section E, say whether medical insurance is provided and how the county arranges cover (SHA, private, mixed, self-funded, reimbursement or other).</li>
+    <li><strong>Jobs</strong> — complete one row per job group (A–U, excluding I and O). Enter the SRC equivalent as text (for example EX4), then min/max basic, house, commuter, airtime and total of other allowances. Mark N/A if the county does not use that group.</li>
+    <li>After you submit, you cannot change answers unless the reviewer asks a clarification. You may then edit only the section they asked about.</li>
+    <li><strong>Benefits</strong> — mark each item Yes, No or Partial. Note who contributes and who is eligible.</li>
+    <li><strong>Documents</strong> — upload the supporting files. You may attach several files under one heading (for example more than one salary structure). A required heading needs at least one file. A tick without a file is not enough.</li>
+    <li><strong>Certify</strong> — your name, designation and initials. That is required before submit if the survey is set that way.</li>
+    <li>Back on the file overview, <strong>Submit for review</strong>. After that you cannot edit until a reviewer sends the file back.</li>
+    <li>If <strong>Clarifications</strong> appear, answer each one, correct the relevant section, and submit again.</li>
+  </ol>
+  <p>You may download a <strong>county pack</strong> of your own answers for your records. It is not the market comparison.</p>
+</div>
+{% endif %}
+
+{% if role == 'consultant' or user.is_admin_role %}
+<div class="card help-block">
+  <h2>Field consultant</h2>
+  <p>You check that a county file can be used. Start with files that are submitted or have been sent back.</p>
+  <ol class="checklist">
+    <li>Dashboard → <strong>Needs attention</strong>, or open <strong>County files</strong> and filter by Submitted / Clarification.</li>
+    <li>Read the questionnaire, then jobs, benefits and the uploaded documents. Check that the structure and supporting files match the figures.</li>
+    <li>Fill the <strong>Validation</strong> checklist. Use the comments where something is incomplete or looks off.</li>
+    <li>If the county must correct something, send a <strong>Clarification</strong> and name the module. That returns the file to them.</li>
+    <li>When the file is in order, <strong>Mark validated</strong>.</li>
+    <li>Open <strong>Comparators</strong>. Enter pay and benefits for the same jobs the counties used. Only organisations marked for the market median are used in Analysis. A platform administrator can delete a comparator from its Details page — that also removes its pay and benefits figures.</li>
+    <li>On a county file, open <strong>Individual responses</strong> to see staff who submitted through that county’s survey link.</li>
+  </ol>
+</div>
+{% endif %}
+
+{% if role == 'analyst' or role == 'consultant' or user.is_admin_role %}
+<div class="card help-block">
+  <h2>Analyst</h2>
+  <p>You work after files have been validated and comparator pay has been entered. You do not fill county files.</p>
+  <ol class="checklist">
+    <li>Open <strong>Analysis</strong>. Pick a county and Basic or Total cash. Each row is a job group. County P25 / P50 / P75 are the official midpoint plus any staff forms for that group (quartiles need two or more figures). Market P25 / P50 / P75 are percentiles of comparator organisation medians. Use <strong>By SRC equivalent</strong> to see groups that map to the same SRC code (for example EX4).</li>
+    <li>Hide empty groups if a county has not filled a row. Download the market workbook for every county at once.</li>
+    <li>On a county file, use <strong>Download complete file</strong> for one zip: the county workbook and every uploaded document, arranged in folders. Open <strong>Documents</strong> to download a single file, or documents only.</li>
+    <li>Open <strong>Reports</strong> and download what you need:
+      <ul>
+        <li><strong>County pack</strong> — one county’s full file.</li>
+        <li><strong>Collection progress</strong> — status of every county.</li>
+        <li><strong>Questionnaire extract</strong> — institutional answers, one row per county.</li>
+        <li><strong>Job group pay</strong> — min/max, SRC equivalent and allowances by group.</li>
+        <li><strong>Benefits matrix</strong> — every county’s benefits answers.</li>
+        <li><strong>Document register</strong> — what was uploaded or marked not available.</li>
+        <li><strong>Market position</strong> — the comparison across counties.</li>
+        <li><strong>Individual responses</strong> — staff survey forms.</li>
+      </ul>
+    </li>
+  </ol>
+  <p class="tiny">The official county figure is the midpoint of min and max. Market percentiles are taken from comparator organisations included in the market median. A leftover payroll median on a county row is used only if min and max are both blank.</p>
+</div>
+{% endif %}
+
+<div class="card help-block">
+  <h2>If something will not work</h2>
+  <ul>
+    <li>After submit, the county file is locked. The county can edit again only in sections where a clarification was requested.</li>
+    <li>A county login cannot open another county’s file.</li>
+    <li>Jobs, benefits or document types added in settings appear the next time that file is opened.</li>
+    <li>If you cannot sign in, contact the person who issued the account. Use <strong>Change password</strong> after the first login if you were asked to.</li>
+    <li>The system signs you out after <strong>10 minutes without activity</strong>. You will need to sign in again. That sign-out is written to the audit trail.</li>
+  </ul>
+</div>
+{% endblock %}

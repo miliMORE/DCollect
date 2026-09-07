@@ -1,0 +1,59 @@
+DCollect — live update (do not treat this as a fresh install)
+============================================================
+
+This zip is for the person updating the existing site
+https://collect.internetcongress.org/
+
+It does NOT contain the database, .env, passwords, or county uploads.
+
+1. Unzip this pack on the server (or on your PC, then copy).
+2. Copy the unzipped files OVER the current application files.
+3. Do NOT replace:
+      db.sqlite3
+      .env
+      .venv
+      media/
+4. In the live project folder, run:
+
+      .venv/bin/python manage.py migrate
+      .venv/bin/python manage.py collectstatic --noinput
+
+   Windows:
+
+      .venv\Scripts\python.exe manage.py migrate
+      .venv\Scripts\python.exe manage.py collectstatic --noinput
+
+5. Restart the app (gunicorn / waitress / the existing service).
+
+6. Confirm in live .env (do not overwrite .env from this zip):
+      DEBUG=false
+      ALLOWED_HOSTS includes collect.internetcongress.org
+      CSRF_TRUSTED_ORIGINS includes https://collect.internetcongress.org
+
+Do NOT run run.sh / run.bat / bootstrap on the live server.
+Those are for a first-time machine only. Bootstrap would create starter
+accounts and sample county files; migrate is enough for this update.
+
+Migrations included in this release (must apply if not already applied):
+  catalog.0008_attach_dropdown_lists
+  collection.0010_document_attachments
+  collection.0011_medical_cover_questions
+
+Platform administrators download the user manual from the left menu:
+User manual (PDF). The file is also docs/DCollect-User-Manual.pdf in this pack.
+
+After restart, sign in and check:
+  - County file overview percentages (empty file is 0%, not 100%)
+  - Documents: several files per heading, download each or complete zip
+  - County file → Download complete file (workbook + attachments in folders)
+  - Benefits matrix: Interest charged dropdown on every row
+  - Idle sign-out after 10 minutes without activity
+  - Audit trail (administrators only)
+
+Fresh machine (empty folder, no live data)
+------------------------------------------
+Unzip, then:
+  Windows:  run.bat
+  Linux:    chmod +x run.sh && ./run.sh
+Choose production for gunicorn. Then edit .env (DEBUG=false, hosts, CSRF).
+Change starter passwords at first sign-in (see README.txt).

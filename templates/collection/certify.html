@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Certify · {{ case.county.name }}{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Certification{% endblock %}
+{% block heading %}SECTION K: RESPONDENT CERTIFICATION{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="certify" %}
+<div class="grid grid-2">
+  <div class="card">
+    <p>This is Section K of the county questionnaire. One certification per county file. Date is recorded when you certify.</p>
+    <p>By signing, the county confirms that the questionnaire, benchmark positions, benefits and attached documents are true to the best of the respondent’s knowledge.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="field">
+          <label>{{ field.label }}</label>
+          {{ field }}
+          {{ field.errors }}
+        </div>
+      {% endfor %}
+      <button class="btn gold" type="submit" {% if not can_edit %}disabled{% endif %}>Certify this file</button>
+    </form>
+  </div>
+  <div class="card">
+    <h2>Readiness</h2>
+    {% if progress.overall < 100 %}
+      <div class="flash warning">This file is {{ progress.overall }}% complete. Certification is still allowed, but empty modules will show as 0% on the overview.</div>
+    {% endif %}
+    <p>Questionnaire {{ progress.questionnaire }}%</p>
+    <p>Jobs {{ progress.jobs }}%</p>
+    <p>Benefits {{ progress.benefits }}%</p>
+    <p>Documents {{ progress.documents }}%</p>
+    {% if case.certified_at %}
+      <div class="flash success">Already certified by {{ case.certified_name }} on {{ case.certified_at|date:"d M Y" }}.</div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

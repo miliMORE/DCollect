@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ case.county.name }} · DCollect{% endblock %}
+{% block crumb %}County file{% endblock %}
+{% block heading %}{{ case.county.name }}{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="hub" %}
+<div class="split">
+  <div>
+    <p class="muted">{{ case.survey_period.name }} · <span class="badge {{ case.status }}">{{ case.get_status_display }}</span>
+      {% if case.certified_at %}· Certified {{ case.certified_at|date:"d M Y" }}{% endif %}
+    </p>
+    <p>Completion {{ progress.overall }}%</p>
+    <div class="progress" aria-label="Overall completion"><span style="width:{{ progress.overall }}%"></span></div>
+  </div>
+  <div class="actions">
+    <a class="btn gold" href="{% url 'reports:county_complete' case.pk %}">Download complete file</a>
+    <a class="btn ghost" href="{% url 'reports:county_pack' case.pk %}">Workbook only</a>
+    <a class="btn ghost" href="{% url 'collection:documents_zip' case.pk %}">Documents only</a>
+    {% if user.is_analyst_role or site_settings.allow_county_see_analysis %}
+      <a class="btn ghost" href="{% url 'collection:analysis' %}?case={{ case.pk }}">View analysis</a>
+    {% endif %}
+    {% if can_edit and case.status != 'submitted' %}
+      <a class="btn" href="{% url 'collection:certify' case.pk %}">Certify</a>
+    {% endif %}
+    {% if can_edit and case.status == 'draft' or can_edit and case.status == 'clarification' %}
+      <form method="post" action="{% url 'collection:submit' case.pk %}" data-confirm="This file is {{ progress.overall }}% complete. Submit for consultant review? You will not be able to edit it until it is returned.">
+        {% csrf_token %}
+        <button class="btn gold" type="submit">Submit for review</button>
+      </form>
+    {% endif %}
+    {% if user.can_review and case.status == 'submitted' %}
+      <form method="post" action="{% url 'collection:validate' case.pk %}" data-confirm="Validation checklist is {{ progress.validation }}% filled. Mark this county file as validated?">
+        {% csrf_token %}<button class="btn ok" type="submit">Mark validated</button>
+      </form>
+      <form method="post" action="{% url 'collection:reopen' case.pk %}" data-confirm="Return this file to the county for changes?">
+        {% csrf_token %}<button class="btn danger" type="submit">Return to county</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+
+<div class="grid grid-4">
+  <a class="card card-link" href="{% url 'collection:questionnaire' case.pk %}">
+    <div class="lbl tiny">Questionnaire</div>
+    <div class="num">{{ progress.questionnaire }}%</div>
+    <p class="tiny">Institution, workforce, policy, equity, affordability.</p>
+  </a>
+  <a class="card card-link" href="{% url 'collection:jobs' case.pk %}">
+    <div class="lbl tiny">Benchmark positions</div>
+    <div class="num">{{ progress.jobs }}%</div>
+    <p class="tiny">SRC equivalent, min / max basic, house, commuter, airtime, other.</p>
+  </a>
+  <a class="card card-link" href="{% url 'collection:benefits' case.pk %}">
+    <div class="lbl tiny">Benefits matrix</div>
+    <div class="num">{{ progress.benefits }}%</div>
+    <p class="tiny">Medical, pension, leave, loans and related benefits.</p>
+  </a>
+  <a class="card card-link" href="{% url 'collection:documents' case.pk %}">
+    <div class="lbl tiny">Documents</div>
+    <div class="num">{{ progress.documents }}%</div>
+    <p class="tiny">{% if document_file_count %}{{ document_file_count }} file{{ document_file_count|pluralize }} uploaded. Open to view or download each one.{% else %}Salary structure, schedules, CBA and the rest of the checklist.{% endif %}</p>
+  </a>
+  <a class="card card-link" href="{% url 'collection:individuals' case.pk %}">
+    <div class="lbl tiny">Individual responses</div>
+    <div class="num">{{ individual_count }}</div>
+    <p class="tiny">Staff who submitted through the survey link for this county.</p>
+  </a>
+</div>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Review tools</h2>
+    <div class="actions">
+      {% if user.can_review %}<a class="btn ghost" href="{% url 'collection:validation' case.pk %}">Validation checklist ({{ progress.validation }}%)</a>{% endif %}
+      <a class="btn ghost" href="{% url 'collection:clarifications' case.pk %}">Clarifications</a>
+      <a class="btn ghost" href="{% url 'collection:certify' case.pk %}">Certification</a>
+    </div>
+    <h3 style="margin-top:1rem">Open questions</h3>
+    <ul>
+      {% for item in clarifications %}
+        <li>{% if item.resolved %}Resolved{% else %}Open{% endif %} · {{ item.module }} — {{ item.message|truncatechars:80 }}</li>
+      {% empty %}
+        <li class="muted">None yet.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="card">
+    <h2>Activity</h2>
+    <ul>
+      {% for event in events %}
+        <li class="tiny">{{ event.created_at|date:"d M H:i" }} · {{ event.actor|default:"system" }} · {{ event.verb }} {% if event.detail %}— {{ event.detail }}{% endif %}</li>
+      {% empty %}
+        <li class="muted">No activity yet.</li>
+      {% endfor %}
+    </ul>
+    {% if assign_form %}
+      <hr>
+      <h3>Assignment</h3>
+      <form method="post">
+        {% csrf_token %}
+        {% for field in assign_form %}
+          <div class="field">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button class="btn" type="submit">Save assignment</button>
+      </form>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

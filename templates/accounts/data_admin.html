@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Data administration · DCollect{% endblock %}
+{% block crumb %}Administration{% endblock %}
+{% block heading %}Data administration{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<p class="muted">
+  These tools are for the platform administrator only. They remove <strong>collected survey answers and uploads</strong>.
+  User logins, catalogues and the audit trail stay, unless you delete a login separately under Users.
+  Use this for test files you do not want in the live survey.
+</p>
+
+<div class="grid grid-3">
+  <div class="card stat"><div class="lbl">County files</div><div class="num">{{ file_count }}</div></div>
+  <div class="card stat"><div class="lbl">Staff responses</div><div class="num">{{ staff_count }}</div></div>
+  <div class="card stat"><div class="lbl">User logins</div><div class="num">{{ user_count }}</div></div>
+</div>
+
+<div class="card">
+  <h2>Delete collected data for one county</h2>
+  <p class="muted">Removes that county’s questionnaire, jobs, benefits, uploads, validation, clarifications and staff responses. The county login remains. The audit trail remains.</p>
+  <form method="post" action="{% url 'accounts:purge_county' %}" class="stack-form" data-confirm="This permanently deletes collected answers and uploads for the selected county. Continue?">
+    {% csrf_token %}
+    <div class="grid grid-2">
+      <div class="field">
+        <label for="id_county">County</label>
+        <select class="input" id="id_county" name="county_id" required>
+          <option value="">— Select county —</option>
+          {% for c in counties %}
+            <option value="{{ c.pk }}">{{ c.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="id_county_confirm">Type the county name to confirm</label>
+        <input class="input" id="id_county_confirm" name="confirm" autocomplete="off" placeholder="e.g. Kisumu">
+      </div>
+    </div>
+    <button class="btn danger" type="submit">Delete this county’s collected data</button>
+  </form>
+</div>
+
+<div class="card">
+  <h2>Delete data collected by one user</h2>
+  <p class="muted">
+    If the person is a county respondent, this clears that county’s file and uploads.
+    Documents they uploaded elsewhere are removed. The login is not deleted — use Users for that.
+  </p>
+  <form method="post" action="{% url 'accounts:purge_user_data' %}" class="stack-form" data-confirm="This permanently deletes survey data this person collected. Their login stays. Continue?">
+    {% csrf_token %}
+    <div class="grid grid-2">
+      <div class="field">
+        <label for="id_user">User</label>
+        <select class="input" id="id_user" name="user_id" required>
+          <option value="">— Select user —</option>
+          {% for u in users %}
+            <option value="{{ u.pk }}">{{ u.username }} · {{ u.get_role_display }}{% if u.county %} · {{ u.county.name }}{% endif %}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="id_user_confirm">Type the username to confirm</label>
+        <input class="input" id="id_user_confirm" name="confirm" autocomplete="off" placeholder="username">
+      </div>
+    </div>
+    <button class="btn danger" type="submit">Delete this user’s collected data</button>
+  </form>
+</div>
+
+<div class="card danger-panel">
+  <h2>Reset all collected survey data</h2>
+  <p>
+    Returns collection to an empty launch state: no county files, no answers, no uploads, no staff forms, no comparator pay figures.
+    <strong>Users, passwords, catalogues and the audit trail are not reset.</strong>
+    Open county files again when you are ready to collect.
+  </p>
+  <form method="post" action="{% url 'accounts:reset_data' %}" class="stack-form" data-confirm="This deletes every county file, every answer and every upload. Users and catalogues stay. Continue?">
+    {% csrf_token %}
+    <div class="field">
+      <label for="id_reset_confirm">Type <span class="mono">RESET ALL COLLECTED DATA</span> to confirm</label>
+      <input class="input" id="id_reset_confirm" name="confirm" autocomplete="off">
+    </div>
+    <button class="btn danger" type="submit">Reset collected data</button>
+  </form>
+</div>
+{% endblock %}

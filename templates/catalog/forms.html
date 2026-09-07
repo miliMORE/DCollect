@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}Forms and questions · DCollect{% endblock %}
+{% block crumb %}Setup{% endblock %}
+{% block heading %}Forms and questions{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<p class="muted">
+  Mark what counties must complete. Add extra questionnaire items if the standard survey needs them.
+  Built-in questions can be renamed, made required or hidden — they cannot be deleted.
+</p>
+
+<div class="grid grid-4">
+  <a class="card card-link" href="{% url 'catalog:questions' %}">
+    <div class="lbl tiny">Questionnaire</div>
+    <div class="num">{{ required_question_count }}</div>
+    <p class="tiny">Required questions across sections A–J.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:catalog_list' 'jobs' %}">
+    <div class="lbl tiny">Benchmark jobs</div>
+    <div class="num">{{ required_jobs }}/{{ job_count }}</div>
+    <p class="tiny">Required posts on the jobs table.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:catalog_list' 'benefits' %}">
+    <div class="lbl tiny">Benefits</div>
+    <div class="num">{{ required_benefits }}/{{ benefit_count }}</div>
+    <p class="tiny">Benefits the county must answer Yes / No / Partial.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:catalog_list' 'documents' %}">
+    <div class="lbl tiny">Documents</div>
+    <div class="num">{{ required_docs }}/{{ doc_count }}</div>
+    <p class="tiny">Types marked required must have a file. Optional types still count on the overview when uploaded or marked not available.</p>
+  </a>
+</div>
+
+<div class="card">
+  <h2>Completion rules</h2>
+  <form method="post">
+    {% csrf_token %}
+    <input type="hidden" name="update_rules" value="1">
+    <div class="field">
+      <label>
+        <input class="checkbox" type="checkbox" name="jobs_require_src_equivalent" {% if settings_obj.jobs_require_src_equivalent %}checked{% endif %}>
+        Require SRC equivalent on every applicable benchmark job
+      </label>
+      <div class="help">Counties must map each filled job to an SRC grade such as EX4.</div>
+    </div>
+    <div class="field">
+      <label>
+        <input class="checkbox" type="checkbox" name="require_complete_to_submit" {% if settings_obj.require_complete_to_submit %}checked{% endif %}>
+        Block submit until required questionnaire items, jobs, benefits and documents are complete
+      </label>
+      <div class="help">Stops a county sending an incomplete file.</div>
+    </div>
+    <button class="btn gold" type="submit">Save rules</button>
+  </form>
+</div>
+
+<div class="card">
+  <div class="split">
+    <h2>Questionnaire sections</h2>
+    <a class="btn gold" href="{% url 'catalog:question_new' %}">Add a question</a>
+  </div>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Section</th><th>Active questions</th><th>Required</th><th></th></tr>
+      </thead>
+      <tbody>
+      {% for block in sections %}
+        <tr>
+          <td>{{ block.title }}</td>
+          <td class="mono">{{ block.active }}</td>
+          <td class="mono">{{ block.required }}</td>
+          <td><a href="{% url 'catalog:questions' %}?section={{ block.key }}">Edit questions</a></td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

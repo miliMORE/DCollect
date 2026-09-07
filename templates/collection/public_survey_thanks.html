@@ -1,0 +1,9 @@
+{% extends "collection/public_base.html" %}
+{% block title %}Response received · DCollect{% endblock %}
+{% block content %}
+<div class="card">
+  <h1>Thank you</h1>
+  <p>Your response has been recorded{% if locked_county %} for <strong>{{ locked_county.name }}</strong>{% endif %}. You can close this page.</p>
+  <p class="tiny">If you made a mistake, contact the survey administrator. Do not submit a second form unless you were asked to.</p>
+</div>
+{% endblock %}

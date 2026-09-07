@@ -1,0 +1,191 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Analysis · DCollect{% endblock %}
+{% block crumb %}Market data{% endblock %}
+{% block heading %}Market position{% endblock %}
+{% block content %}
+<form method="get" class="split" style="margin-bottom:1rem">
+  <div class="actions">
+    <label class="tiny" for="id_case">County</label>
+    <select class="input" id="id_case" name="case" style="width:min(320px,100%)" onchange="this.form.submit()">
+      {% for item in cases %}
+        <option value="{{ item.pk }}" {% if case and item.pk == case.pk %}selected{% endif %}>
+          {{ item.county.name }} · {{ item.get_status_display }}{% if item.filled_jobs %} · {{ item.filled_jobs }} groups{% endif %}
+        </option>
+      {% endfor %}
+    </select>
+    <input type="hidden" name="measure" value="{{ measure }}">
+    {% if show_empty %}<input type="hidden" name="show" value="all">{% endif %}
+  </div>
+</form>
+
+{% if not case %}
+  <div class="card">
+    <h2>No county files yet</h2>
+    <p>Open county files and enter job-group pay, or wait for a county to submit. Analysis can preview a file as soon as figures are entered.</p>
+  </div>
+{% elif not rows and not show_empty %}
+  <div class="card">
+    <h2>{{ case.county.name }} has no pay figures yet</h2>
+    <p>Enter the job-group table, or wait for staff to submit through the county survey link.</p>
+    <a class="btn" href="{% url 'collection:jobs' case.pk %}">Open job groups</a>
+    <a class="btn ghost" href="{% url 'collection:individuals' case.pk %}">Individual responses</a>
+  </div>
+{% else %}
+  {% if case.status == 'draft' or case.status == 'clarification' %}
+    <div class="flash warning">{{ case.county.name }} is still <strong>{{ case.get_status_display }}</strong>. These figures are a preview, not a validated result.</div>
+  {% endif %}
+
+  <div class="grid grid-4">
+    <div class="card stat"><div class="lbl">Groups compared</div><div class="num">{{ summary.compared }}</div></div>
+    <div class="card stat"><div class="lbl">Below market</div><div class="num pos-below">{{ summary.below }}</div></div>
+    <div class="card stat"><div class="lbl">Around market</div><div class="num pos-around">{{ summary.around }}</div></div>
+    <div class="card stat"><div class="lbl">Above market</div><div class="num pos-above">{{ summary.above }}</div></div>
+  </div>
+
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2>{{ case.county.name }} versus market</h2>
+        <p class="muted">
+          One row per job group.
+          {% if measure == "total" %}
+            Pay is total cash (basic plus house, commuter, airtime and other).
+          {% else %}
+            Pay is basic salary (midpoint of min and max).
+          {% endif %}
+          County P25 / P50 / P75 are the official figure plus any staff forms for that group.
+          Quartiles need at least two observations; with one figure only P50 is shown.
+          Market percentiles are taken from comparator organisation medians (each organisation counts once).
+          Ratio 1.00 is at the market median. Scale uses market P25 / P75 when two or more organisations have a figure.
+        </p>
+      </div>
+      <div class="actions">
+        <a class="btn {% if measure == 'basic' %}gold{% else %}ghost{% endif %}" href="?case={{ case.pk }}&amp;measure=basic{% if show_empty %}&amp;show=all{% endif %}">Basic</a>
+        <a class="btn {% if measure == 'total' %}gold{% else %}ghost{% endif %}" href="?case={{ case.pk }}&amp;measure=total{% if show_empty %}&amp;show=all{% endif %}">Total cash</a>
+        {% if show_empty %}
+          <a class="btn ghost" href="?case={{ case.pk }}&amp;measure={{ measure }}">Hide empty groups</a>
+        {% else %}
+          <a class="btn ghost" href="?case={{ case.pk }}&amp;measure={{ measure }}&amp;show=all">Show empty groups</a>
+        {% endif %}
+        <a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Open file</a>
+        <a class="btn ghost" href="{% url 'reports:county_complete' case.pk %}">Download complete file</a>
+        <a class="btn ghost" href="{% url 'reports:county_pack' case.pk %}">Workbook only</a>
+        {% if user.is_analyst_role %}
+          <a class="btn gold" href="{% url 'reports:analysis_workbook' %}">Download workbook</a>
+        {% endif %}
+      </div>
+    </div>
+
+    {% if orgs %}
+      <p class="tiny">Market comparators:
+        {% for org in orgs %}{{ org.name }}{% if not forloop.last %} · {% endif %}{% endfor %}
+        · {{ summary.staff_n }} staff form{{ summary.staff_n|pluralize }} used
+      </p>
+    {% else %}
+      <div class="flash warning">No comparator pay has been entered for this period. Add figures under Comparators or the market columns will stay blank.</div>
+    {% endif %}
+
+    <div class="table-wrap scroll-y">
+      <table class="data analysis">
+        <thead>
+          <tr>
+            <th>Job group</th>
+            <th>SRC equivalent</th>
+            <th>Official</th>
+            <th>Staff n</th>
+            <th>County P25</th>
+            <th>County P50</th>
+            <th>County P75</th>
+            <th>Market n</th>
+            <th>Market P25</th>
+            <th>Market P50</th>
+            <th>Market P75</th>
+            <th>Ratio</th>
+            <th>Position</th>
+            <th>Scale</th>
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+          <tr>
+            <td><strong>{{ row.job_group }}</strong></td>
+            <td>{% if row.src_equivalent %}{{ row.src_equivalent }}{% else %}—{% endif %}</td>
+            <td class="mono">{% if row.official is not None %}{{ row.official|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono">{{ row.staff_n }}</td>
+            <td class="mono">{% if row.county_p25 is not None %}{{ row.county_p25|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono">{% if row.county is not None %}{{ row.county|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono">{% if row.county_p75 is not None %}{{ row.county_p75|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono">{{ row.market_n }}</td>
+            <td class="mono">{% if row.market_p25 is not None %}{{ row.market_p25|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono">{% if row.market is not None %}{{ row.market|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono">{% if row.market_p75 is not None %}{{ row.market_p75|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            <td class="mono {% if row.position_class %}{{ row.position_class }}{% endif %}">
+              {% if row.position is not None %}{{ row.position|floatformat:2 }}{% else %}—{% endif %}
+            </td>
+            <td>
+              {% if row.position_label %}
+                <span class="badge {{ row.position_class }}">{{ row.position_label }}</span>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+            <td>
+              {% if row.scale_label %}
+                <span class="badge {{ row.scale_class }}">{{ row.scale_label }}</span>
+              {% else %}
+                —
+              {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="14">No job groups to show.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="tiny">Amounts are Kenya shillings. Ratio below 0.90 is below market; above 1.10 is above market. Scale is below P25 (lag) or above P75 (lead) when market quartiles exist.</p>
+    {% if unmatched_staff %}
+      <p class="tiny">{{ unmatched_staff }} individual response{{ unmatched_staff|pluralize }} could not be matched to a job group and are not in this table. They remain on <a href="{% url 'collection:individuals' case.pk %}">Individual responses</a>.</p>
+    {% endif %}
+  </div>
+
+  {% if orgs %}
+  <div class="card">
+    <h2>Comparator medians</h2>
+    <p class="muted">Each organisation’s median for jobs that sit in that county job group.</p>
+    <div class="table-wrap scroll-y">
+      <table class="data analysis">
+        <thead>
+          <tr>
+            <th>Job group</th>
+            {% for org in orgs %}
+              <th>{{ org.name }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+        {% for row in rows %}
+          <tr>
+            <td>{{ row.job_group }}</td>
+            {% for comp in row.comparators %}
+              <td class="mono">{% if comp is not None %}{{ comp|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+            {% endfor %}
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  {% if src_rollups %}
+  <div class="card">
+    <h2>By SRC equivalent</h2>
+    <p class="muted">Job groups this county mapped to the same SRC denotation (for example EX4). County percentiles pool the official figure and staff forms across those groups. Market n is the number of comparator organisations with a figure in any of those groups.</p>
+    {% include "collection/_grade_rollup.html" with rollups=src_rollups heading="SRC equivalent" %}
+  </div>
+  {% endif %}
+{% endif %}
+{% endblock %}
+

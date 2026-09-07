@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+{% block title %}Comparators · DCollect{% endblock %}
+{% block crumb %}Market data{% endblock %}
+{% block heading %}Comparator organisations{% endblock %}
+{% block content %}
+<p class="muted">
+  {% if period %}{{ period.name }} · {% endif %}
+  Enter pay and benefits against the same benchmark jobs the counties use. Only organisations marked “in market median” appear on Analysis.
+</p>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Organisation</th>
+          <th>Sector</th>
+          <th>In market median</th>
+          <th>Active</th>
+          <th>Pay rows</th>
+          <th>Benefits</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in org_rows %}
+        <tr>
+          <td>{{ row.org.name }}</td>
+          <td>{{ row.org.sector|default:"—" }}</td>
+          <td>{% if row.org.include_in_market_median %}<span class="badge validated">Yes</span>{% else %}<span class="badge">No</span>{% endif %}</td>
+          <td>{% if row.org.is_active %}Yes{% else %}No{% endif %}</td>
+          <td class="mono">{{ row.pay_filled }} / {{ row.pay_total }}</td>
+          <td class="mono">{{ row.benefit_filled }} / {{ row.benefit_total }}</td>
+          <td>
+            <div class="actions">
+              <a class="btn" href="{% url 'collection:comparator_pay' row.org.pk %}">Pay table</a>
+              <a class="btn ghost" href="{% url 'collection:comparator_benefits' row.org.pk %}">Benefits</a>
+              {% if can_edit %}<a class="btn ghost" href="{% url 'collection:comparator_edit' row.org.pk %}">Details</a>{% endif %}
+              {% if can_delete %}<a class="btn ghost" href="{% url 'collection:comparator_edit' row.org.pk %}#delete-comparator">Delete</a>{% endif %}
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7">No comparator organisations yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if can_edit %}
+<div class="card" style="max-width:640px">
+  <h2>Add comparator</h2>
+  <p class="muted">After you save, open the pay table and fill the same jobs as the counties.</p>
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field">
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <label>{{ field }} {{ field.label }}</label>
+        {% else %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        {% endif %}
+        {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <button class="btn gold" type="submit">Save organisation</button>
+  </form>
+</div>
+{% endif %}
+<p><a class="btn ghost" href="{% url 'collection:analysis' %}">Open analysis</a></p>
+{% endblock %}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Benefits · {{ case.county.name }}{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Benefits{% endblock %}
+{% block heading %}Employee benefits matrix{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="benefits" %}
+{% if not can_edit and user.role == 'county' %}
+  <div class="flash warning">This section is locked. You can only change it if the reviewer asked a clarification on benefits.</div>
+{% endif %}
+<div class="card">
+  {% if formset.non_form_errors %}<div class="flash error">{{ formset.non_form_errors }}</div>{% endif %}
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <div class="table-wrap overflow-visible">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Benefit</th><th>Provided?</th><th>Interest charged?</th><th>Employer contribution</th>
+          <th>Employee contribution</th><th>Eligibility criteria</th><th>Explanatory comments</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for form in formset %}
+        <tr>
+          <td>{{ form.id }}<strong>{{ form.instance.benefit.name }}</strong>{{ form.errors }}</td>
+          <td>{{ form.provided }}</td>
+          <td>{{ form.interest_charged }}</td>
+          <td>{{ form.employer_contribution }}</td>
+          <td>{{ form.employee_contribution }}</td>
+          <td>{{ form.eligibility }}</td>
+          <td>{{ form.comments }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <div class="actions sticky-actions" style="margin-top:1rem">
+      <button class="btn gold" type="submit" {% if not can_edit %}disabled{% endif %}>Save benefits</button>
+      <a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Back to file</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

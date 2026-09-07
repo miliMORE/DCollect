@@ -1,0 +1,11 @@
+<nav class="file-nav" aria-label="Setup">
+  <a class="{% if setup_section == 'settings' %}on{% endif %}" href="{% url 'catalog:settings' %}">{% if user.can_edit_site %}Platform{% else %}Collection setup{% endif %}</a>
+  <a class="{% if setup_section == 'periods' %}on{% endif %}" href="{% url 'catalog:periods' %}">Survey periods</a>
+  <a class="{% if setup_section == 'forms' %}on{% endif %}" href="{% url 'catalog:forms' %}">Forms &amp; questions</a>
+  <a class="{% if setup_section == 'catalogs' %}on{% endif %}" href="{% url 'catalog:catalog_list' 'jobs' %}">Catalogues</a>
+  <a class="{% if setup_section == 'users' %}on{% endif %}" href="{% url 'accounts:users' %}">Users</a>
+  <a class="{% if setup_section == 'staff' %}on{% endif %}" href="{% url 'collection:staff_links' %}">Staff survey links</a>
+  {% if user.can_see_audit %}
+    <a class="{% if setup_section == 'data' %}on{% endif %}" href="{% url 'accounts:data' %}">Data administration</a>
+  {% endif %}
+</nav>

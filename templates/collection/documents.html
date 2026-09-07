@@ -1,0 +1,92 @@
+{% extends "base.html" %}
+{% block title %}Documents · {{ case.county.name }}{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Documents{% endblock %}
+{% block heading %}Document checklist{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="documents" %}
+<p class="muted">
+  Each heading can hold several files (for example more than one salary structure).
+  Reviewers: open a file name to download that document, or download everything as a zip.
+  Required headings need at least one file. Optional headings can be marked Not available.
+</p>
+<div class="actions" style="margin-bottom:1rem">
+  <a class="btn gold" href="{% url 'reports:county_complete' case.pk %}">Download complete file</a>
+  <a class="btn ghost" href="{% url 'collection:documents_zip' case.pk %}">Download documents only</a>
+</div>
+{% if not can_edit and user.role == 'county' %}
+  <div class="flash warning">This section is locked. You can only change it if the reviewer asked a clarification on documents.</div>
+{% endif %}
+{% for doc, form in rows %}
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2>{{ doc.document_type.name }} {% if doc.document_type.is_required %}<span class="badge req">Required</span>{% endif %}</h2>
+        {% with files=doc.attachments.all %}
+          {% if files %}
+            <p class="tiny">{{ files|length }} file{{ files|length|pluralize }} attached. Download each one, or use the zip above.</p>
+            <div class="table-wrap" style="border:0;margin-top:0.4rem">
+            <table class="data">
+              <thead>
+                <tr><th>File</th><th>Uploaded</th><th></th></tr>
+              </thead>
+              <tbody>
+              {% for att in files %}
+                <tr>
+                  <td>{{ att.display_name }}</td>
+                  <td class="tiny">{% if att.uploaded_at %}{{ att.uploaded_at|date:"d M Y H:i" }}{% else %}—{% endif %}</td>
+                  <td>
+                    <div class="actions">
+                      <a class="btn gold" href="{% url 'collection:document_file_download' case.pk doc.pk att.pk %}">Download</a>
+                      {% if can_edit %}
+                        <form method="post" action="{% url 'collection:document_file_delete' case.pk doc.pk att.pk %}" class="inline-form" data-confirm="Remove {{ att.display_name }}?">
+                          {% csrf_token %}
+                          <button class="btn ghost" type="submit">Remove</button>
+                        </form>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              {% endfor %}
+              </tbody>
+            </table>
+            </div>
+          {% elif doc.file %}
+            <p>
+              <a class="btn gold" href="{% url 'collection:document_download' case.pk doc.pk %}">Download {{ doc.file.name|default:"file" }}</a>
+            </p>
+          {% else %}
+            <p class="muted">No files uploaded yet.</p>
+          {% endif %}
+        {% endwith %}
+      </div>
+    </div>
+    <form method="post" enctype="multipart/form-data">
+      {% csrf_token %}
+      <input type="hidden" name="doc_id" value="{{ doc.pk }}">
+      <div class="grid grid-3">
+        <div class="field">
+          <label>Add files</label>
+          <input class="input" type="file" name="files" multiple>
+          <div class="help">Select one or more files and save. Existing files are kept.</div>
+        </div>
+        <div class="field">
+          <label>Received?</label>
+          {{ form.received }}
+        </div>
+        <div class="field">
+          <label>Comments / validation notes</label>
+          {{ form.comments }}
+        </div>
+        {% if form.not_available %}
+        <div class="field">
+          <label>{{ form.not_available }} Not available</label>
+          <div class="help">Use only when this document is optional and you do not have a file.</div>
+        </div>
+        {% endif %}
+      </div>
+      <button class="btn" type="submit" {% if not can_edit %}disabled{% endif %}>Save this section</button>
+    </form>
+  </div>
+{% endfor %}
+<a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Back to file</a>
+{% endblock %}

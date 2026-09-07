@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Reports · DCollect{% endblock %}
+{% block crumb %}Outputs{% endblock %}
+{% block heading %}Reports{% endblock %}
+{% block content %}
+<p class="muted">
+  {% if period %}{{ period.name }} · {% endif %}{{ case_count }} county file{{ case_count|pluralize }}.
+  Download a workbook and open it in a spreadsheet application.
+</p>
+
+<div class="grid grid-2">
+  <div class="card">
+    <h2>Collection progress</h2>
+    <p class="muted">Status and completion for every county file in the active period.</p>
+    <a class="btn gold" href="{% url 'reports:progress' %}">Download progress</a>
+  </div>
+  <div class="card">
+    <h2>Questionnaire extract</h2>
+    <p class="muted">One row per county. Every institutional answer.</p>
+    <a class="btn gold" href="{% url 'reports:questionnaire_extract' %}">Download extract</a>
+  </div>
+  <div class="card">
+    <h2>Individual responses</h2>
+    <p class="muted">Every staff survey form, tagged to the county it belongs to. Use this with the market workbook.</p>
+    <a class="btn gold" href="{% url 'reports:individuals_extract' %}">Download individual responses</a>
+  </div>
+  <div class="card">
+    <h2>Market position</h2>
+    <p class="muted">Every county × job group for basic and for total cash: official figure, staff count, county P25/P50/P75, market percentiles, ratio and scale, SRC roll-ups, and a sheet of each comparator organisation’s median.</p>
+    <a class="btn gold" href="{% url 'reports:analysis_workbook' %}">Download market workbook</a>
+  </div>
+  <div class="card">
+    <h2>Job group pay</h2>
+    <p class="muted">Min, max, SRC equivalent and allowances for every county job group.</p>
+    <a class="btn gold" href="{% url 'reports:job_groups' %}">Download job group pay</a>
+  </div>
+  <div class="card">
+    <h2>Benefits matrix</h2>
+    <p class="muted">Every county’s benefits answers, including interest, eligibility and comments.</p>
+    <a class="btn gold" href="{% url 'reports:benefits' %}">Download benefits</a>
+  </div>
+  <div class="card">
+    <h2>Document register</h2>
+    <p class="muted">What was requested, received, marked not available, and each uploaded file name (one row per file). Open a county file or Download files to get the documents themselves.</p>
+    <a class="btn gold" href="{% url 'reports:documents' %}">Download document register</a>
+  </div>
+  <div class="card">
+    <h2>How to use the files</h2>
+    <ul class="tiny">
+      <li>Complete file — one zip with the county workbook and every uploaded document, in folders.</li>
+      <li>County pack — the Excel workbook only (questionnaire, jobs, staff forms, benefits, checklist, and for reviewers market position).</li>
+      <li>Progress — who has submitted and how complete each module is.</li>
+      <li>Questionnaire extract — every institutional answer, one row per county.</li>
+      <li>Individual responses — every staff form, including job group.</li>
+      <li>Market workbook — basic and total cash position, SRC roll-ups, and comparator medians.</li>
+      <li>Document register — one row per uploaded file; use Download files for the documents themselves.</li>
+    </ul>
+    <a class="btn ghost" href="{% url 'collection:analysis' %}">Open live analysis</a>
+  </div>
+</div>
+
+<div class="card">
+  <h2>County packs</h2>
+  <p class="muted">
+    <strong>Complete file</strong> is a zip: the county workbook plus every uploaded document, in one folder.
+    Workbook only is the Excel pack. Documents only is the attachments.
+  </p>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>County</th>
+          <th>Status</th>
+          <th>Updated</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for case in cases %}
+        <tr>
+          <td>{{ case.county.name }}</td>
+          <td><span class="badge {{ case.status }}">{{ case.get_status_display }}</span></td>
+          <td class="tiny">{{ case.updated_at|date:"d M Y H:i" }}</td>
+          <td>
+            <div class="actions">
+              <a class="btn gold" href="{% url 'reports:county_complete' case.pk %}">Complete file</a>
+              <a class="btn" href="{% url 'reports:county_pack' case.pk %}">Workbook</a>
+              <a class="btn ghost" href="{% url 'collection:documents_zip' case.pk %}">Documents</a>
+              <a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Open file</a>
+            </div>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No county files in the active period. An administrator must open files first.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

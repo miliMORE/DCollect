@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Staff survey links · DCollect{% endblock %}
+{% block crumb %}Setup{% endblock %}
+{% block heading %}Staff survey links{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<p class="muted">Send a county link to people who work in that county but do not have a DCollect login. Each completed form is stored on that county’s <strong>Individual responses</strong> page. The open link lets the person pick the county themselves.</p>
+{% if not period %}
+  <div class="flash warning">Activate a survey period first.</div>
+{% else %}
+  {% if open_link %}
+  <div class="card">
+    <h2>Open link (person chooses the county)</h2>
+    <p class="mono">{{ request.scheme }}://{{ request.get_host }}{% url 'collection:public_survey' open_link.token %}</p>
+    <button class="btn ghost" type="button" data-copy="{{ request.scheme }}://{{ request.get_host }}{% url 'collection:public_survey' open_link.token %}">Copy open link</button>
+  </div>
+  {% endif %}
+  <div class="card">
+    <div class="split">
+      <h2>{{ period.name }}</h2>
+      <p class="muted">{{ total }} individual response{{ total|pluralize }} so far.</p>
+    </div>
+    <div class="table-wrap">
+      <table class="data">
+        <thead>
+          <tr><th>County</th><th>Responses</th><th>Link</th><th></th></tr>
+        </thead>
+        <tbody>
+        {% for link, n in rows %}
+          <tr>
+            <td>{{ link.county.name }}</td>
+            <td class="mono">{{ n }}</td>
+            <td class="tiny mono">{{ request.scheme }}://{{ request.get_host }}{% url 'collection:public_survey' link.token %}</td>
+            <td>
+              <button class="btn ghost" type="button" data-copy="{{ request.scheme }}://{{ request.get_host }}{% url 'collection:public_survey' link.token %}">Copy</button>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No county links yet. Open county files for the active period.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endif %}
+{% endblock %}

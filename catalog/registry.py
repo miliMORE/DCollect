@@ -1,0 +1,132 @@
+from .models import (
+    BenchmarkJob,
+    BenefitType,
+    ComparatorOrganization,
+    County,
+    DocumentType,
+    JobFamily,
+    JobGroup,
+    SRCGrade,
+    ValidationItem,
+)
+
+CATALOGS = {
+    "counties": {
+        "model": County,
+        "title": "Counties",
+        "blurb": "The 47 County Governments. Inactive counties are hidden from new users and new files.",
+        "fields": ["code", "name", "region", "sort_order", "is_active"],
+        "columns": [("code", "Code"), ("name", "Name"), ("region", "Region"), ("is_active", "Active")],
+        "search": ["name", "code", "region"],
+        "label_field": "name",
+    },
+    "job-families": {
+        "model": JobFamily,
+        "title": "Job families",
+        "blurb": "Cadres used on benchmark jobs (Health, Finance, ICT, and the rest).",
+        "fields": ["code", "name", "description", "sort_order", "is_active"],
+        "columns": [("code", "Code"), ("name", "Name"), ("is_active", "Active")],
+        "search": ["name", "code"],
+        "label_field": "name",
+    },
+    "job-groups": {
+        "model": JobGroup,
+        "title": "Job groups",
+        "blurb": "Public service job groups A–V used to place benchmark jobs.",
+        "fields": ["code", "name", "sort_order", "is_active"],
+        "columns": [("code", "Code"), ("name", "Name"), ("is_active", "Active")],
+        "search": ["code", "name"],
+        "label_field": "code",
+    },
+    "src-grades": {
+        "model": SRCGrade,
+        "title": "SRC grades",
+        "blurb": "Salaries and Remuneration Commission grades linked to benchmark jobs.",
+        "fields": ["code", "name", "sort_order", "is_active"],
+        "columns": [("code", "Code"), ("name", "Name"), ("is_active", "Active")],
+        "search": ["code", "name"],
+        "label_field": "code",
+    },
+    "jobs": {
+        "model": BenchmarkJob,
+        "title": "Benchmark jobs",
+        "blurb": "The locked job list every county and comparator fills. Do not let counties invent titles.",
+        "fields": [
+            "code",
+            "title",
+            "job_family",
+            "job_group",
+            "src_grade",
+            "description",
+            "is_required",
+            "sort_order",
+            "is_active",
+        ],
+        "columns": [
+            ("title", "Title"),
+            ("job_family", "Family"),
+            ("job_group", "Group"),
+            ("src_grade", "SRC"),
+            ("is_required", "Required"),
+            ("is_active", "Active"),
+        ],
+        "search": ["title", "code"],
+        "label_field": "title",
+    },
+    "benefits": {
+        "model": BenefitType,
+        "title": "Benefit types",
+        "blurb": "Rows on the employee benefits matrix.",
+        "fields": ["code", "name", "description", "collects_interest", "is_required", "sort_order", "is_active"],
+        "columns": [("name", "Name"), ("is_required", "Required"), ("collects_interest", "Interest"), ("is_active", "Active")],
+        "search": ["name", "code"],
+        "label_field": "name",
+    },
+    "documents": {
+        "model": DocumentType,
+        "title": "Document types",
+        "blurb": "Upload slots on each county file. Mark required items that block a clean validation.",
+        "fields": ["code", "name", "description", "is_required", "sort_order", "is_active"],
+        "columns": [("name", "Name"), ("is_required", "Required"), ("is_active", "Active")],
+        "search": ["name", "code"],
+        "label_field": "name",
+    },
+    "validation": {
+        "model": ValidationItem,
+        "title": "Validation items",
+        "blurb": "Consultant quality-check list on each county file.",
+        "fields": ["code", "name", "description", "sort_order", "is_active"],
+        "columns": [("name", "Name"), ("is_active", "Active")],
+        "search": ["name", "code"],
+        "label_field": "name",
+    },
+    "comparators": {
+        "model": ComparatorOrganization,
+        "title": "Comparator organisations",
+        "blurb": "Market organisations. Only those marked “include in market median” enter analysis.",
+        "fields": [
+            "code",
+            "name",
+            "sector",
+            "include_in_market_median",
+            "notes",
+            "sort_order",
+            "is_active",
+        ],
+        "columns": [
+            ("name", "Name"),
+            ("sector", "Sector"),
+            ("include_in_market_median", "In median"),
+            ("is_active", "Active"),
+        ],
+        "search": ["name", "code", "sector"],
+        "label_field": "name",
+    },
+}
+
+
+def get_catalog(key):
+    spec = CATALOGS.get(key)
+    if not spec:
+        raise KeyError(key)
+    return spec

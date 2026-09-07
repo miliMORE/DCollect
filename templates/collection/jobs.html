@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}Benchmark positions · {{ case.county.name }} · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Jobs{% endblock %}
+{% block heading %}Benchmark positions{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="jobs" %}
+<p class="muted">Enter current county ranges by job group (A–U, excluding I and O). Analysis uses the midpoint of min and max. Mark a group not applicable if the county does not use it. SRC equivalent is free text — for example Job Group S may be EX4.{% if require_src %} SRC equivalent is required unless the group is marked not applicable.{% endif %}</p>
+{% if not can_edit and user.role == 'county' %}
+  <div class="flash warning">This section is locked. You can only change it if the reviewer asked a clarification on benchmark positions.</div>
+{% endif %}
+<div class="card">
+  {% if formset.non_form_errors %}<div class="flash error">{{ formset.non_form_errors }}</div>{% endif %}
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    {{ formset.management_form }}
+    <div class="table-wrap scroll-y">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Job group</th><th>N/A</th>
+          <th>SRC equivalent</th>
+          <th>Min basic</th><th>Max basic</th>
+          <th>House</th><th>Commuter</th><th>Airtime</th><th>Total of Other Allowances</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for form in formset %}
+        <tr>
+          <td>
+            {{ form.id }}
+            <strong>{{ form.instance.job_group.title }}</strong>
+            {{ form.errors }}
+          </td>
+          <td>{{ form.not_applicable }}</td>
+          <td>{{ form.src_equivalent }}</td>
+          <td class="num">{{ form.min_basic }}</td>
+          <td class="num">{{ form.max_basic }}</td>
+          <td class="num">{{ form.house_allowance }}</td>
+          <td class="num">{{ form.commuter_allowance }}</td>
+          <td class="num">{{ form.airtime }}</td>
+          <td class="num">{{ form.other_allowances }}</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+    <div class="actions sticky-actions" style="margin-top:1rem">
+      <button class="btn gold" type="submit" {% if not can_edit %}disabled{% endif %}>Save positions</button>
+      <a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Back to file</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

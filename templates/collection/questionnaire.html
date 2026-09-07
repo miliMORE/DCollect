@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Questionnaire · {{ case.county.name }} · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Questionnaire{% endblock %}
+{% block heading %}COUNTY GOVERNMENT SALARY &amp; REMUNERATION QUESTIONNAIRE{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="questionnaire" %}
+<div class="flash info">
+  <strong>{{ intro }}</strong>
+  This file is for <strong>{{ case.county.name }}</strong> only
+  ({{ case.survey_period.name }}). Each County Government completes one questionnaire. Other counties have their own files.
+</div>
+<div class="section-nav">
+  {% for key, label, done in sections %}
+    <a class="{% if section == key %}on{% endif %} {% if done %}done{% endif %}" href="?section={{ key }}">{{ label }}</a>
+  {% endfor %}
+</div>
+<div class="card">
+  <h2>{{ section_title }}</h2>
+  {% if not can_edit %}
+    <div class="flash warning">This section is locked. After submit you can only change it if the reviewer asked a clarification on the questionnaire.</div>
+  {% endif %}
+  {% if section == 'a' %}
+    <div class="grid grid-2">
+      <div class="field">
+        <label>County :</label>
+        <p class="readonly-value">{{ case.county.name }}</p>
+        <div class="help">Filled from the county file. Not editable here — one questionnaire per county.</div>
+      </div>
+      <div class="field">
+        <label>Survey Period:</label>
+        <p class="readonly-value">{{ case.survey_period.name }}</p>
+        <div class="help">The active survey period for this file.</div>
+      </div>
+    </div>
+  {% endif %}
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    {% for field in form %}
+      {% if field.field.group_heading %}
+        <h3 class="question-group">{{ field.field.group_heading }}</h3>
+      {% endif %}
+      <div class="field">
+        <label for="{{ field.id_for_label }}">{{ field.label }}{% if field.field.required %} <span class="badge req">Required</span>{% endif %}</label>
+        {{ field }}
+        {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    {% if section == 'b' %}
+      <div class="field">
+        <label>Total Employees</label>
+        <p class="readonly-value">{% if total_employees is not None %}{{ total_employees }}{% else %}—{% endif %}</p>
+        <div class="help">Permanent + contract + temporary/casual + other. Calculated automatically.</div>
+      </div>
+    {% endif %}
+    <div class="actions sticky-actions">
+      <button class="btn ghost" type="submit" name="stay" value="1" {% if not can_edit %}disabled{% endif %}>Save this section</button>
+      <button class="btn gold" type="submit" {% if not can_edit %}disabled{% endif %}>Save and continue</button>
+      <a class="btn ghost" href="{% url 'collection:case_hub' case.pk %}">Back to file</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

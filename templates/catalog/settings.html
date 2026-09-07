@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% block title %}Variables and settings · DCollect{% endblock %}
+{% block crumb %}Setup{% endblock %}
+{% block heading %}Variables and settings{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<p class="muted">{% if can_edit_site %}This is the control panel for the survey. Change names, rules and catalogues here.{% else %}You can change collection lists, survey periods, upload rules and county files. The site name, client and help text are locked.{% endif %} Counties pick up new jobs, benefits and documents the next time a file is opened.</p>
+<div class="card">
+  <h2>Open county files</h2>
+  <p class="muted">
+    {% if period %}Active period: {{ period.name }}.{% else %}Activate a survey period first.{% endif %}
+    Opening a file is safe to repeat — existing files are left as they are.
+  </p>
+  <form method="post" action="{% url 'collection:open_period' %}" style="margin-bottom:1.1rem">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <div class="field">
+      <label for="id_open_counties">Counties to open</label>
+      <select class="input" id="id_open_counties" name="county" multiple size="8" style="max-width:420px;height:auto">
+        {% for county in counties %}
+          <option value="{{ county.pk }}">{{ county.name }}{% if county.pk in open_ids %} — file already open{% endif %}</option>
+        {% endfor %}
+      </select>
+      <div class="help">Hold Ctrl (or Cmd) to select more than one county.</div>
+    </div>
+    <button class="btn gold" type="submit" {% if not period %}disabled{% endif %}>Open file for selected counties</button>
+  </form>
+  <form method="post" action="{% url 'collection:open_period' %}">
+    {% csrf_token %}
+    <input type="hidden" name="next" value="{{ request.path }}">
+    <button class="btn" type="submit" {% if not period %}disabled{% endif %}>Open a file for every county</button>
+  </form>
+</div>
+
+<div class="grid grid-4">
+  <a class="card card-link" href="{% url 'collection:staff_links' %}">
+    <div class="lbl tiny">Staff survey links</div>
+    <div class="num">{{ counts.counties }}</div>
+    <p class="tiny">Send a link so staff without a login can submit against a county.</p>
+  </a>
+  <a class="card card-link" href="{% url 'collection:questionnaires' %}">
+    <div class="lbl tiny">Questionnaires</div>
+    <div class="num">{{ counts.counties }}</div>
+    <p class="tiny">Open any county’s A–J institutional form.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:forms' %}">
+    <div class="lbl tiny">Forms &amp; questions</div>
+    <div class="num">{{ counts.required_questions }}</div>
+    <p class="tiny">Required items and extra questionnaire questions.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:catalog_list' 'jobs' %}">
+    <div class="lbl tiny">Benchmark jobs</div>
+    <div class="num">{{ counts.jobs }}</div>
+    <p class="tiny">Locked list every county fills.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:catalog_list' 'counties' %}">
+    <div class="lbl tiny">Active counties</div>
+    <div class="num">{{ counts.counties }}</div>
+    <p class="tiny">Used when opening county files.</p>
+  </a>
+  <a class="card card-link" href="{% url 'catalog:periods' %}">
+    <div class="lbl tiny">Survey periods</div>
+    <div class="num">{{ counts.periods }}</div>
+    <p class="tiny">One period is active at a time.</p>
+  </a>
+</div>
+
+{% if can_edit_site %}
+<div class="card">
+  <h2>Platform identity and rules</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-2">
+      <div class="field">
+        <label for="{{ form.short_name.id_for_label }}">{{ form.short_name.label }}</label>
+        {{ form.short_name }}
+        <div class="help">{{ form.short_name.help_text }}</div>
+        {{ form.short_name.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.survey_title.id_for_label }}">{{ form.survey_title.label }}</label>
+        {{ form.survey_title }}
+        <div class="help">{{ form.survey_title.help_text }}</div>
+        {{ form.survey_title.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.org_name.id_for_label }}">{{ form.org_name.label }}</label>
+        {{ form.org_name }}
+        <div class="help">{{ form.org_name.help_text }}</div>
+        {{ form.org_name.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.client_name.id_for_label }}">{{ form.client_name.label }}</label>
+        {{ form.client_name }}
+        <div class="help">{{ form.client_name.help_text }}</div>
+        {{ form.client_name.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.support_email.id_for_label }}">{{ form.support_email.label }}</label>
+        {{ form.support_email }}
+        <div class="help">{{ form.support_email.help_text }}</div>
+        {{ form.support_email.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.active_survey_period.id_for_label }}">{{ form.active_survey_period.label }}</label>
+        {{ form.active_survey_period }}
+        <div class="help">{{ form.active_survey_period.help_text }}</div>
+        {{ form.active_survey_period.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.max_upload_mb.id_for_label }}">{{ form.max_upload_mb.label }}</label>
+        {{ form.max_upload_mb }}
+        <div class="help">{{ form.max_upload_mb.help_text }}</div>
+        {{ form.max_upload_mb.errors }}
+      </div>
+      <div class="field">
+        <label>{{ form.require_certification_to_submit }} {{ form.require_certification_to_submit.label }}</label>
+        <div class="help">{{ form.require_certification_to_submit.help_text }}</div>
+        {{ form.require_certification_to_submit.errors }}
+      </div>
+      <div class="field">
+        <label>{{ form.allow_county_see_analysis }} {{ form.allow_county_see_analysis.label }}</label>
+        <div class="help">{{ form.allow_county_see_analysis.help_text }}</div>
+        {{ form.allow_county_see_analysis.errors }}
+      </div>
+    </div>
+    <div class="field">
+      <label for="{{ form.purpose_text.id_for_label }}">{{ form.purpose_text.label }}</label>
+      {{ form.purpose_text }}
+      {{ form.purpose_text.errors }}
+    </div>
+    <div class="field">
+      <label for="{{ form.how_to_use_text.id_for_label }}">{{ form.how_to_use_text.label }}</label>
+      {{ form.how_to_use_text }}
+      {{ form.how_to_use_text.errors }}
+    </div>
+    <div class="field">
+      <label for="{{ form.confidentiality_text.id_for_label }}">{{ form.confidentiality_text.label }}</label>
+      {{ form.confidentiality_text }}
+      {{ form.confidentiality_text.errors }}
+    </div>
+    <button class="btn gold" type="submit">Save settings</button>
+  </form>
+</div>
+{% else %}
+<div class="card">
+  <h2>Site identity (read only)</h2>
+  <p class="muted">Only the platform administrator can change the product name, client, support email or the text printed on county packs.</p>
+  <div class="grid grid-2">
+    <div>
+      <div class="lbl tiny">Product name</div>
+      <p>{{ site.short_name }}</p>
+    </div>
+    <div>
+      <div class="lbl tiny">Survey title</div>
+      <p>{{ site.survey_title }}</p>
+    </div>
+    <div>
+      <div class="lbl tiny">Consultant / implementing firm</div>
+      <p>{{ site.org_name }}</p>
+    </div>
+    <div>
+      <div class="lbl tiny">Client</div>
+      <p>{{ site.client_name }}</p>
+    </div>
+    <div>
+      <div class="lbl tiny">Support email</div>
+      <p>{{ site.support_email|default:"—" }}</p>
+    </div>
+    <div>
+      <div class="lbl tiny">County users can open live analysis</div>
+      <p>{% if site.allow_county_see_analysis %}Yes{% else %}No{% endif %}</p>
+    </div>
+  </div>
+</div>
+<div class="card">
+  <h2>Collection rules</h2>
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-2">
+      <div class="field">
+        <label for="{{ form.active_survey_period.id_for_label }}">{{ form.active_survey_period.label }}</label>
+        {{ form.active_survey_period }}
+        <div class="help">{{ form.active_survey_period.help_text }}</div>
+        {{ form.active_survey_period.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.max_upload_mb.id_for_label }}">{{ form.max_upload_mb.label }}</label>
+        {{ form.max_upload_mb }}
+        <div class="help">{{ form.max_upload_mb.help_text }}</div>
+        {{ form.max_upload_mb.errors }}
+      </div>
+      <div class="field">
+        <label>{{ form.require_certification_to_submit }} {{ form.require_certification_to_submit.label }}</label>
+        <div class="help">{{ form.require_certification_to_submit.help_text }}</div>
+        {{ form.require_certification_to_submit.errors }}
+      </div>
+    </div>
+    <button class="btn gold" type="submit">Save collection settings</button>
+  </form>
+</div>
+{% endif %}
+
+<div class="card">
+  <h2>Catalogues</h2>
+  <p class="muted">Edit these lists in DCollect. You do not need Django admin for day-to-day changes.</p>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr><th>Catalogue</th><th>Active items</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Counties</td><td class="mono">{{ counts.counties }}</td><td><a href="{% url 'catalog:catalog_list' 'counties' %}">Manage</a></td></tr>
+        <tr><td>Job families</td><td class="mono">{{ counts.families }}</td><td><a href="{% url 'catalog:catalog_list' 'job-families' %}">Manage</a></td></tr>
+        <tr><td>Job groups</td><td class="mono">{{ counts.groups }}</td><td><a href="{% url 'catalog:catalog_list' 'job-groups' %}">Manage</a></td></tr>
+        <tr><td>SRC grades</td><td class="mono">{{ counts.grades }}</td><td><a href="{% url 'catalog:catalog_list' 'src-grades' %}">Manage</a></td></tr>
+        <tr><td>Benchmark jobs</td><td class="mono">{{ counts.jobs }}</td><td><a href="{% url 'catalog:catalog_list' 'jobs' %}">Manage</a></td></tr>
+        <tr><td>Benefit types</td><td class="mono">{{ counts.benefits }}</td><td><a href="{% url 'catalog:catalog_list' 'benefits' %}">Manage</a></td></tr>
+        <tr><td>Document types</td><td class="mono">{{ counts.documents }}</td><td><a href="{% url 'catalog:catalog_list' 'documents' %}">Manage</a></td></tr>
+        <tr><td>Validation items</td><td class="mono">{{ counts.validation }}</td><td><a href="{% url 'catalog:catalog_list' 'validation' %}">Manage</a></td></tr>
+        <tr><td>Comparator organisations</td><td class="mono">{{ counts.comparators }}</td><td><a href="{% url 'catalog:catalog_list' 'comparators' %}">Manage</a></td></tr>
+        <tr><td>Dropdown lists</td><td class="mono">{{ counts.option_sets }}</td><td><a href="{% url 'catalog:options' %}">Manage</a></td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

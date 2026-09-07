@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{% if instance %}Edit user{% else %}New user{% endif %} · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'accounts:users' %}">Users</a> / {% if instance %}Edit{% else %}New{% endif %}{% endblock %}
+{% block heading %}{% if instance %}Edit user{% else %}New user{% endif %}{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<div class="card" style="max-width:680px">
+  <form method="post">
+    {% csrf_token %}
+    <div class="grid grid-2">
+      <div class="field">
+        <label for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {{ form.username.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.role.id_for_label }}">Role</label>
+        {{ form.role }}
+        <div class="help">{{ form.role.help_text }}</div>
+        {{ form.role.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.first_name.id_for_label }}">First name</label>
+        {{ form.first_name }}
+        {{ form.first_name.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.last_name.id_for_label }}">Last name</label>
+        {{ form.last_name }}
+        {{ form.last_name.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {{ form.email.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.phone.id_for_label }}">Phone</label>
+        {{ form.phone }}
+        {{ form.phone.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.job_title.id_for_label }}">Job title</label>
+        {{ form.job_title }}
+        {{ form.job_title.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.county.id_for_label }}">County</label>
+        {{ form.county }}
+        <div class="help">{{ form.county.help_text }}</div>
+        {{ form.county.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.password1.id_for_label }}">{{ form.password1.label }}</label>
+        {{ form.password1 }}
+        <div class="help">{{ form.password1.help_text }}</div>
+        {{ form.password1.errors }}
+      </div>
+      <div class="field">
+        <label for="{{ form.password2.id_for_label }}">{{ form.password2.label }}</label>
+        {{ form.password2 }}
+        {{ form.password2.errors }}
+      </div>
+    </div>
+    <div class="field">
+      <label>{{ form.is_active }} {{ form.is_active.label }}</label>
+      <div class="help">{{ form.is_active.help_text }}</div>
+      {{ form.is_active.errors }}
+    </div>
+    <div class="field">
+      <label>{{ form.must_change_password }} {{ form.must_change_password.label }}</label>
+      <div class="help">{{ form.must_change_password.help_text }}</div>
+      {{ form.must_change_password.errors }}
+    </div>
+    <div class="actions">
+      <button class="btn gold" type="submit">Save user</button>
+      <a class="btn ghost" href="{% url 'accounts:users' %}">Cancel</a>
+    </div>
+  </form>
+</div>
+{% if instance and user.can_edit_site and instance.pk != user.pk %}
+<div class="card danger-panel" style="max-width:680px">
+  <h2>Delete this login</h2>
+  <p class="muted">
+    Removes the account so they can no longer sign in. County files, answers and uploads they already entered stay.
+    Their rows in the audit trail stay, under this username.
+  </p>
+  <form method="post" action="{% url 'accounts:user_delete' instance.pk %}" data-confirm="Delete the login {{ instance.username }}? Collected survey data will be kept.">
+    {% csrf_token %}
+    <div class="field">
+      <label for="id_delete_confirm">Type <span class="mono">{{ instance.username }}</span> to confirm</label>
+      <input class="input" id="id_delete_confirm" name="confirm" autocomplete="off">
+    </div>
+    <button class="btn danger" type="submit">Delete user</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

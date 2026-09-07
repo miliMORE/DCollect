@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Dropdown lists · DCollect{% endblock %}
+{% block crumb %}Setup / Catalogues{% endblock %}
+{% block heading %}Dropdown lists{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<div class="split">
+  <p class="muted">These lists power the questionnaire and validation dropdowns. Change a label here and the next form load uses it.</p>
+  <a class="btn gold" href="{% url 'catalog:option_new' %}">New list</a>
+</div>
+{% for set in sets %}
+  <div class="card">
+    <div class="split">
+      <div>
+        <h2>{{ set.name }}</h2>
+        <p class="tiny mono">{{ set.code }}{% if set.help_text %} · {{ set.help_text }}{% endif %}</p>
+      </div>
+      <a class="btn ghost" href="{% url 'catalog:option_edit' set.pk %}">Edit</a>
+    </div>
+    <p class="tiny">
+      {% for item in set.items.all %}
+        {% if item.is_active %}{{ item.label }}{% if not forloop.last %} · {% endif %}{% endif %}
+      {% empty %}
+        No options yet.
+      {% endfor %}
+    </p>
+  </div>
+{% empty %}
+  <div class="card">No dropdown lists yet. Run <span class="mono">python manage.py bootstrap</span> or create a list.</div>
+{% endfor %}
+{% endblock %}

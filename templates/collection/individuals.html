@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}Individual responses · {{ case.county.name }} · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Individual responses{% endblock %}
+{% block heading %}{{ case.county.name }} individual responses{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="individuals" %}
+<p class="muted">Staff who submitted through the survey link for <strong>{{ case.county.name }}</strong>. Each form is one observation. The P25 / P50 / P75 cards below are across all jobs in this county (quartiles need two or more responses). On Analysis they are combined with the official jobs-table figure for that job group.</p>
+<div class="actions" style="margin-bottom:1rem">
+  <a class="btn gold" href="{% url 'reports:county_individuals' case.pk %}">Download these responses</a>
+  {% if user.is_analyst_role %}
+    <a class="btn ghost" href="{% url 'reports:individuals_extract' %}">Download all counties</a>
+  {% endif %}
+</div>
+
+{% if link %}
+<div class="card">
+  <div class="split">
+    <div>
+      <h2>Link for this county</h2>
+      <p class="mono tiny">{{ request.scheme }}://{{ request.get_host }}{% url 'collection:public_survey' link.token %}</p>
+    </div>
+    <button class="btn gold" type="button" data-copy="{{ request.scheme }}://{{ request.get_host }}{% url 'collection:public_survey' link.token %}">Copy link</button>
+  </div>
+</div>
+{% endif %}
+
+<div class="grid grid-4">
+  <div class="card stat"><div class="lbl">Responses</div><div class="num">{{ stats.n }}</div></div>
+  <div class="card stat"><div class="lbl">Basic P25</div><div class="num">{% if stats.p25 is not None %}{{ stats.p25|floatformat:0|intcomma }}{% else %}—{% endif %}</div></div>
+  <div class="card stat"><div class="lbl">Basic P50</div><div class="num">{% if stats.p50 is not None %}{{ stats.p50|floatformat:0|intcomma }}{% else %}—{% endif %}</div></div>
+  <div class="card stat"><div class="lbl">Basic P75</div><div class="num">{% if stats.p75 is not None %}{{ stats.p75|floatformat:0|intcomma }}{% else %}—{% endif %}</div></div>
+</div>
+
+<div class="card">
+  <h2>Submitted forms</h2>
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Submitted</th>
+          <th>Job</th>
+          <th>Benchmark match</th>
+          <th>Job group</th>
+          <th>Terms</th>
+          <th>Basic</th>
+          <th>Total cash</th>
+          <th>Name</th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for row in responses %}
+        <tr>
+          <td class="tiny">{{ row.submitted_at|date:"d M Y H:i" }}</td>
+          <td>{{ row.job_title }}</td>
+          <td>{% if row.job %}{{ row.job.title }}{% else %}—{% endif %}</td>
+          <td>{% if row.job and row.job.job_group %}{{ row.job.job_group.code }}{% else %}—{% endif %}</td>
+          <td>{{ row.get_employment_type_display|default:"—" }}</td>
+          <td class="mono">{{ row.current_basic|floatformat:0|intcomma }}</td>
+          <td class="mono">{{ row.total_cash|floatformat:0|intcomma }}</td>
+          <td>{{ row.respondent_name|default:"—" }}</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="8">No individual responses for {{ case.county.name }} yet. Send the county link above.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

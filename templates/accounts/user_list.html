@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Users · DCollect{% endblock %}
+{% block crumb %}Setup / Users{% endblock %}
+{% block heading %}Users{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<p class="muted">Issue one county respondent per County Government. Consultants review files and comparator data. Analysts download reports. Collection administrators manage catalogues and files. Only a platform administrator can change the site name and help text.</p>
+
+<div class="grid grid-4">
+  <div class="card stat"><div class="lbl">Administrators</div><div class="num">{{ counts.admin }}</div></div>
+  <div class="card stat"><div class="lbl">Collection admins</div><div class="num">{{ counts.collection_admin }}</div></div>
+  <div class="card stat"><div class="lbl">Consultants</div><div class="num">{{ counts.consultant }}</div></div>
+  <div class="card stat"><div class="lbl">County logins</div><div class="num">{{ counts.county }}</div></div>
+</div>
+
+<div class="split">
+  <form method="get" class="actions">
+    <input class="input" name="q" value="{{ q }}" placeholder="Search name, username, county" style="width:240px">
+    <select class="input" name="role" style="width:180px">
+      <option value="">All roles</option>
+      {% for value, label in roles %}
+        <option value="{{ value }}" {% if role == value %}selected{% endif %}>{{ label }}</option>
+      {% endfor %}
+    </select>
+    <select class="input" name="status" style="width:140px">
+      <option value="">Any status</option>
+      <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+      <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+    </select>
+    <button class="btn ghost" type="submit">Filter</button>
+  </form>
+  <div class="actions">
+    {% if missing_counties %}
+      <form method="post" action="{% url 'accounts:create_county_users' %}" data-confirm="Create a county login for each of the {{ missing_counties }} county/counties that do not have one?">
+        {% csrf_token %}
+        <button class="btn" type="submit">Create {{ missing_counties }} missing county login{{ missing_counties|pluralize }}</button>
+      </form>
+    {% endif %}
+    <a class="btn gold" href="{% url 'accounts:user_new' %}">New user</a>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Username</th><th>Name</th><th>Role</th><th>County</th><th>Active</th><th>Must change password</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for u in users %}
+        <tr>
+          <td class="mono">{{ u.username }}</td>
+          <td>{{ u.get_full_name|default:"—" }}</td>
+          <td>{{ u.get_role_display }}</td>
+          <td>{{ u.county|default:"—" }}</td>
+          <td>{% if u.is_active %}<span class="badge validated">Yes</span>{% else %}<span class="badge">No</span>{% endif %}</td>
+          <td>{% if u.must_change_password %}Yes{% else %}No{% endif %}</td>
+          <td>
+            <div class="actions">
+              {% if user.can_edit_site or u.role != 'admin' %}
+                <a class="btn ghost" href="{% url 'accounts:user_edit' u.pk %}">Edit</a>
+                {% if u.pk != user.pk %}
+                  <form method="post" action="{% url 'accounts:user_toggle' u.pk %}" data-confirm="{% if u.is_active %}Deactivate {{ u.username }}? They will not be able to sign in. Collected data stays.{% else %}Reactivate {{ u.username }}?{% endif %}">
+                    {% csrf_token %}
+                    <button class="btn ghost" type="submit">{% if u.is_active %}Deactivate{% else %}Reactivate{% endif %}</button>
+                  </form>
+                {% endif %}
+                {% if user.can_edit_site and u.pk != user.pk %}
+                  <a class="btn ghost" href="{% url 'accounts:user_edit' u.pk %}#id_delete_confirm">Delete</a>
+                {% endif %}
+              {% else %}
+                <span class="tiny muted">Locked</span>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="7">No users match this filter.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

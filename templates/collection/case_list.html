@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}County files{% endblock %}
+{% block crumb %}Collection{% endblock %}
+{% block heading %}County files{% endblock %}
+{% block content %}
+<div class="split">
+  <form method="get" class="actions">
+    <input class="input" name="q" value="{{ q }}" placeholder="Search county" style="width:220px">
+    <select class="input" name="status" style="width:200px">
+      <option value="">All statuses</option>
+      <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+      <option value="submitted" {% if status == 'submitted' %}selected{% endif %}>Submitted</option>
+      <option value="clarification" {% if status == 'clarification' %}selected{% endif %}>Clarification</option>
+      <option value="validated" {% if status == 'validated' %}selected{% endif %}>Validated</option>
+    </select>
+    <button class="btn ghost" type="submit">Filter</button>
+  </form>
+  {% if user.can_configure %}
+    <div class="actions">
+      <form method="post" action="{% url 'collection:open_period' %}" class="actions">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <select class="input" name="county" style="width:220px">
+          <option value="">Select a county…</option>
+          {% for county in counties %}
+            <option value="{{ county.pk }}">{{ county.name }}{% if county.pk in open_ids %} (open){% endif %}</option>
+          {% endfor %}
+        </select>
+        <button class="btn gold" type="submit">Open this county</button>
+      </form>
+      <form method="post" action="{% url 'collection:open_period' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        <button class="btn" type="submit">Open every county</button>
+      </form>
+    </div>
+  {% endif %}
+</div>
+<div class="card">
+  <table class="data">
+    <thead>
+      <tr>
+        <th>County</th><th>Status</th><th>Overall</th><th>Questionnaire</th><th>Jobs</th><th>Benefits</th><th>Docs</th><th>Consultant</th><th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for case, progress in rows %}
+      <tr>
+        <td><a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a></td>
+        <td><span class="badge {{ case.status }}">{{ case.get_status_display }}</span></td>
+        <td class="mono">{{ progress.overall }}%</td>
+        <td class="mono"><a href="{% url 'collection:questionnaire' case.pk %}">{{ progress.questionnaire }}%</a></td>
+        <td class="mono"><a href="{% url 'collection:jobs' case.pk %}">{{ progress.jobs }}%</a></td>
+        <td class="mono"><a href="{% url 'collection:benefits' case.pk %}">{{ progress.benefits }}%</a></td>
+        <td class="mono"><a href="{% url 'collection:documents' case.pk %}">{{ progress.documents }}%</a></td>
+        <td>{{ case.assigned_consultant|default:"—" }}</td>
+        <td>
+          <a href="{% url 'collection:case_hub' case.pk %}">File</a>
+          · <a href="{% url 'collection:documents' case.pk %}">Documents</a>
+          · <a href="{% url 'reports:county_complete' case.pk %}">Complete file</a>
+          · <a href="{% url 'reports:county_pack' case.pk %}">Workbook</a>
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="9">No county files for this period.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

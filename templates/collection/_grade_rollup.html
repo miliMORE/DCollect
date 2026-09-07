@@ -1,0 +1,57 @@
+{% load humanize %}
+<div class="table-wrap scroll-y">
+  <table class="data analysis">
+    <thead>
+      <tr>
+        <th>{{ heading }}</th>
+        <th>Groups</th>
+        <th>Average</th>
+        <th>County P25</th>
+        <th>County P50</th>
+        <th>County P75</th>
+        <th>Market n</th>
+        <th>Market P25</th>
+        <th>Market P50</th>
+        <th>Market P75</th>
+        <th>County P50 / market</th>
+        <th>Position</th>
+        <th>Market scale</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in rollups %}
+      <tr>
+        <td>{{ row.label }}</td>
+        <td class="mono">{{ row.jobs_with_pay }}</td>
+        <td class="mono">{% if row.average is not None %}{{ row.average|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono">{% if row.county_p25 is not None %}{{ row.county_p25|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono">{% if row.county is not None %}{{ row.county|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono">{% if row.county_p75 is not None %}{{ row.county_p75|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono">{{ row.market_n }}</td>
+        <td class="mono">{% if row.market_p25 is not None %}{{ row.market_p25|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono">{% if row.market is not None %}{{ row.market|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono">{% if row.market_p75 is not None %}{{ row.market_p75|floatformat:0|intcomma }}{% else %}—{% endif %}</td>
+        <td class="mono {% if row.position_class %}{{ row.position_class }}{% endif %}">
+          {% if row.position is not None %}{{ row.position|floatformat:2 }}{% else %}—{% endif %}
+        </td>
+        <td>
+          {% if row.position_label %}
+            <span class="badge {{ row.position_class }}">{{ row.position_label }}</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+        <td>
+          {% if row.scale_label %}
+            <span class="badge {{ row.scale_class }}">{{ row.scale_label }}</span>
+          {% else %}
+            —
+          {% endif %}
+        </td>
+      </tr>
+    {% empty %}
+      <tr><td colspan="13">No grouped figures yet.</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>

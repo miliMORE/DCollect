@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{{ spec.title }} · DCollect{% endblock %}
+{% block crumb %}Setup / Catalogues{% endblock %}
+{% block heading %}{{ spec.title }}{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<div class="split">
+  <p class="muted">{{ spec.blurb }}</p>
+  <a class="btn gold" href="{% url 'catalog:catalog_new' key %}">New item</a>
+</div>
+<form method="get" class="actions" style="margin-bottom:1rem">
+  <input class="input" name="q" value="{{ q }}" placeholder="Search" style="width:240px">
+  <button class="btn ghost" type="submit">Search</button>
+  {% if q %}<a class="btn ghost" href="{% url 'catalog:catalog_list' key %}">Clear</a>{% endif %}
+</form>
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          {% for field, label in spec.columns %}
+            <th>{{ label }}</th>
+          {% endfor %}
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for obj, cells in rows %}
+        <tr>
+          {% for cell in cells %}
+            <td>{{ cell }}</td>
+          {% endfor %}
+          <td>
+            <a href="{% url 'catalog:catalog_edit' key obj.pk %}">Edit</a>
+            {% if key == 'comparators' and user.can_edit_site %}
+              · <a href="{% url 'collection:comparator_edit' obj.pk %}#delete-comparator">Delete</a>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="{{ spec.columns|length|add:1 }}">No items yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

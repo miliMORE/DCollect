@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ section_title }} · Questions · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'catalog:forms' %}">Forms</a> / Questions{% endblock %}
+{% block heading %}{{ section_title }}{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<div class="section-nav">
+  {% for key, title in sections.items %}
+    <a class="{% if section == key %}on{% endif %}" href="?section={{ key }}">{{ key|upper }}</a>
+  {% endfor %}
+</div>
+<div class="split">
+  <p class="muted">Turn on Required for items the county must not skip. Deactivate a built-in question to hide it. Add extra questions for this survey if needed.</p>
+  <a class="btn gold" href="{% url 'catalog:question_new' %}?section={{ section }}">Add question to this section</a>
+</div>
+<div class="card">
+  <div class="table-wrap">
+    <table class="data">
+      <thead>
+        <tr>
+          <th>Question</th><th>Type</th><th>Required</th><th>Active</th><th>Source</th><th></th>
+        </tr>
+      </thead>
+      <tbody>
+      {% for item in items %}
+        <tr>
+          <td>
+            <strong>{{ item.label }}</strong>
+            {% if item.help_text %}<div class="tiny">{{ item.help_text }}</div>{% endif %}
+          </td>
+          <td>
+            {{ item.get_input_type_display }}{% if item.option_set %} · {{ item.option_set.name }}{% endif %}
+            {% if item.input_type == 'choice' and not item.option_set %}
+              <div class="tiny" style="color:var(--bad)">No dropdown list attached — counties will see an empty list.</div>
+            {% endif %}
+          </td>
+          <td>{% if item.is_required %}<span class="badge req">Required</span>{% else %}Optional{% endif %}</td>
+          <td>{% if item.is_active %}<span class="badge validated">Yes</span>{% else %}<span class="badge">Hidden</span>{% endif %}</td>
+          <td>{% if item.is_builtin %}Built-in{% else %}Added{% endif %}</td>
+          <td><a href="{% url 'catalog:question_edit' item.pk %}">Edit</a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">No questions in this section yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

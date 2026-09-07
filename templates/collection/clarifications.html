@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Clarifications · {{ case.county.name }}{% endblock %}
+{% block crumb %}<a href="{% url 'collection:case_hub' case.pk %}">{{ case.county.name }}</a> / Clarifications{% endblock %}
+{% block heading %}Clarifications{% endblock %}
+{% block content %}
+{% include "includes/case_nav.html" with case=case module="clarifications" %}
+<div class="grid grid-2">
+  <div>
+    {% for item in items %}
+      <div class="card">
+        <div class="split">
+          <strong>{{ item.module }}</strong>
+          <span class="badge {% if item.resolved %}validated{% else %}clarification{% endif %}">{% if item.resolved %}Resolved{% else %}Open{% endif %}</span>
+        </div>
+        <p>{{ item.message }}</p>
+        <p class="tiny">{{ item.created_by }} · {{ item.created_at|date:"d M Y H:i" }}</p>
+        {% if item.response %}<p><strong>Response:</strong> {{ item.response }}</p>{% endif %}
+        {% if not item.resolved and can_respond %}
+          <form method="post" action="{% url 'collection:resolve' case.pk %}">
+            {% csrf_token %}
+            <input type="hidden" name="item_id" value="{{ item.pk }}">
+            <div class="field">{{ response_form.response }}</div>
+            <button class="btn" type="submit">Send response</button>
+          </form>
+        {% endif %}
+      </div>
+    {% empty %}
+      <div class="card">No clarifications yet.</div>
+    {% endfor %}
+  </div>
+  <div class="card">
+    <h2>Request a clarification</h2>
+    {% if form %}
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+          <div class="field">
+            <label>{{ field.label }}</label>
+            {{ field }}
+          </div>
+        {% endfor %}
+        <button class="btn gold" type="submit">Send to county</button>
+      </form>
+    {% else %}
+      <p class="muted">Only consultants and administrators can open a clarification.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

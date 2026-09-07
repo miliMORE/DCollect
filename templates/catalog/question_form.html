@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{% if instance %}Edit question{% else %}New question{% endif %} · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'catalog:forms' %}">Forms</a> / {% if instance %}Edit{% else %}New{% endif %}{% endblock %}
+{% block heading %}{% if instance %}Edit question{% else %}Add a question{% endif %}{% endblock %}
+{% block content %}
+{% include "catalog/_setup_nav.html" %}
+<div class="card" style="max-width:720px">
+  {% if instance.is_builtin %}
+    <p class="muted">This is a built-in survey question. You can change the wording, help text, whether it is required, and the input type. You cannot delete it.</p>
+  {% endif %}
+  <p class="muted">To sit a question between two others, choose <strong>Place after</strong> the question that should come immediately before it. Sort numbers are assigned automatically.</p>
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field">
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <label>{{ field }} {{ field.label }}</label>
+        {% else %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        {% endif %}
+        {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="actions">
+      <button class="btn gold" type="submit">Save question</button>
+      <a class="btn ghost" href="{% url 'catalog:questions' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% if instance and not instance.is_builtin %}
+<div class="card danger-panel" style="max-width:720px">
+  <h2>Remove this question</h2>
+  <p class="muted">Answers already stored for this extra question will be removed with it.</p>
+  <form method="post" action="{% url 'catalog:question_delete' instance.pk %}" data-confirm="Remove this custom question?">
+    {% csrf_token %}
+    <button class="btn danger" type="submit">Delete question</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}

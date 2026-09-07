@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+{% block title %}Dashboard · DCollect{% endblock %}
+{% block crumb %}Workspace{% endblock %}
+{% block heading %}Good {{ greeting }}, {{ user.first_name|default:user.username }}{% endblock %}
+{% block content %}
+
+{% if not period %}
+  <div class="flash warning">No survey period is active. An administrator must create and activate one under Variables &amp; settings.</div>
+{% endif %}
+
+{% if site_settings %}
+<div class="card briefing">
+  <div class="briefing-kicker">About this survey</div>
+  <h2>{{ site_settings.survey_title }}</h2>
+  <p class="tiny">{{ site_settings.client_name }} · {{ site_settings.org_name }}</p>
+  <div class="grid grid-2 briefing-grid">
+    <div>
+      <h3>Purpose</h3>
+      <p>{{ site_settings.purpose_text|linebreaksbr }}</p>
+    </div>
+    <div>
+      <h3>Confidentiality</h3>
+      <p>{{ site_settings.confidentiality_text|linebreaksbr }}</p>
+    </div>
+  </div>
+</div>
+{% endif %}
+
+{% if user.role == 'county' %}
+  {% if my_case %}
+    <div class="card">
+      <div class="split">
+        <div>
+          <h2>{{ my_case.county.name }} county file</h2>
+          <p class="muted">{{ my_case.survey_period.name }} · <span class="badge {{ my_case.status }}">{{ my_case.get_status_display }}</span>
+            {% if my_case.certified_at %}· Certified{% endif %}
+          </p>
+        </div>
+        <div class="actions">
+          <a class="btn gold" href="{% url 'collection:case_hub' my_case.pk %}">Open file</a>
+          <a class="btn ghost" href="{% url 'reports:county_complete' my_case.pk %}">Download complete file</a>
+          <a class="btn ghost" href="{% url 'collection:documents' my_case.pk %}">Documents</a>
+        </div>
+      </div>
+      <p>Overall completion {{ progress.overall }}%</p>
+      <div class="progress" aria-label="Overall completion"><span style="width:{{ progress.overall }}%"></span></div>
+    </div>
+
+    {% if next_action %}
+      <div class="card">
+        <div class="split">
+          <div>
+            <div class="tiny">Next step</div>
+            <h2>{{ next_action.title }}</h2>
+            <p class="muted">{{ next_action.detail }}</p>
+          </div>
+          <a class="btn gold" href="{% url next_action.url_name my_case.pk %}">{{ next_action.label }}</a>
+        </div>
+      </div>
+    {% endif %}
+
+    <div class="grid grid-4">
+      <a class="card card-link" href="{% url 'collection:questionnaire' my_case.pk %}">
+        <div class="lbl tiny">Questionnaire</div>
+        <div class="num">{{ progress.questionnaire }}%</div>
+      </a>
+      <a class="card card-link" href="{% url 'collection:jobs' my_case.pk %}">
+        <div class="lbl tiny">Benchmark jobs</div>
+        <div class="num">{{ progress.jobs }}%</div>
+      </a>
+      <a class="card card-link" href="{% url 'collection:benefits' my_case.pk %}">
+        <div class="lbl tiny">Benefits</div>
+        <div class="num">{{ progress.benefits }}%</div>
+      </a>
+      <a class="card card-link" href="{% url 'collection:documents' my_case.pk %}">
+        <div class="lbl tiny">Documents</div>
+        <div class="num">{{ progress.documents }}%</div>
+      </a>
+      <a class="card card-link" href="{% url 'collection:individuals' my_case.pk %}">
+        <div class="lbl tiny">Staff responses</div>
+        <div class="num">View</div>
+      </a>
+    </div>
+
+    {% if my_clarifications %}
+      <div class="card">
+        <h2>Open clarifications</h2>
+        <ul>
+          {% for item in my_clarifications %}
+            <li>{{ item.module }} — {{ item.message|truncatechars:120 }}</li>
+          {% endfor %}
+        </ul>
+        <a class="btn" href="{% url 'collection:clarifications' my_case.pk %}">Answer them</a>
+      </div>
+    {% endif %}
+  {% else %}
+    <div class="card">
+      <h2>No county file yet</h2>
+      <p>Ask the survey administrator to open files for the active period and link your account to a county.</p>
+      <a class="btn ghost" href="{% url 'collection:help' %}">What I need to do</a>
+    </div>
+  {% endif %}
+
+{% else %}
+  <div class="grid grid-4">
+    <a class="card stat card-link" href="{% url 'collection:cases' %}"><div class="lbl">County files</div><div class="num">{{ stats.total }}</div></a>
+    <a class="card stat card-link" href="{% url 'collection:cases' %}?status=draft"><div class="lbl">Draft</div><div class="num">{{ stats.draft }}</div></a>
+    <a class="card stat card-link" href="{% url 'collection:cases' %}?status=submitted"><div class="lbl">Submitted</div><div class="num">{{ stats.submitted }}</div></a>
+    <a class="card stat card-link" href="{% url 'collection:cases' %}?status=clarification"><div class="lbl">Clarification</div><div class="num">{{ stats.clarification }}</div></a>
+  </div>
+  <div class="grid grid-4">
+    <a class="card stat card-link" href="{% url 'collection:cases' %}?status=validated"><div class="lbl">Validated</div><div class="num">{{ stats.validated }}</div></a>
+    {% if comparator_summary %}
+      <a class="card stat card-link" href="{% url 'collection:comparators' %}">
+        <div class="lbl">Comparators with pay</div>
+        <div class="num">{{ comparator_summary.with_pay }}/{{ comparator_summary.orgs }}</div>
+      </a>
+    {% endif %}
+  </div>
+
+  {% if setup %}
+    <div class="card">
+      <h2>Setup checklist</h2>
+      <ul>
+        <li>{% if setup.has_period %}Active survey period is set.{% else %}No active survey period — create one under Variables &amp; settings.{% endif %}</li>
+        <li>
+          {{ setup.files }} of {{ setup.counties }} counties have a file.
+          {% if setup.files < setup.counties %}
+            Open the rest from Variables &amp; settings.
+          {% endif %}
+        </li>
+        <li>
+          {{ setup.county_logins }} of {{ setup.counties }} counties have a respondent login.
+          {% if setup.county_logins < setup.counties %}
+            <a href="{% url 'accounts:users' %}">Create missing logins</a>
+          {% endif %}
+        </li>
+      </ul>
+    </div>
+  {% endif %}
+
+  <div class="grid grid-2">
+    <div class="card">
+      <div class="split">
+        <h2>Needs attention</h2>
+        <a href="{% url 'collection:cases' %}">All files</a>
+      </div>
+      <table class="data">
+        <thead><tr><th>County</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+        <tbody>
+        {% for case in queue %}
+          <tr>
+            <td>{{ case.county.name }}</td>
+            <td><span class="badge {{ case.status }}">{{ case.get_status_display }}</span></td>
+            <td class="tiny">{{ case.updated_at|date:"d M H:i" }}</td>
+            <td>
+              <a href="{% url 'collection:questionnaire' case.pk %}">Questionnaire</a>
+              · <a href="{% url 'collection:documents' case.pk %}">Documents</a>
+              · <a href="{% url 'collection:case_hub' case.pk %}">File</a>
+            </td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">Nothing waiting for review.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <h2>Open clarifications</h2>
+      <table class="data">
+        <thead><tr><th>County</th><th>Module</th><th></th></tr></thead>
+        <tbody>
+        {% for item in open_clarifications %}
+          <tr>
+            <td>{{ item.case.county.name }}</td>
+            <td>{{ item.module }}</td>
+            <td><a href="{% url 'collection:clarifications' item.case.pk %}">View</a></td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="3">None outstanding.</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="split">
+      <h2>Recently updated</h2>
+      <a href="{% url 'collection:cases' %}">View all</a>
+    </div>
+    <table class="data">
+      <thead><tr><th>County</th><th>Status</th><th>Updated</th><th></th></tr></thead>
+      <tbody>
+      {% for case in cases %}
+        <tr>
+          <td>{{ case.county.name }}</td>
+          <td><span class="badge {{ case.status }}">{{ case.get_status_display }}</span></td>
+          <td class="tiny">{{ case.updated_at|date:"d M Y H:i" }}</td>
+          <td>
+            <a href="{% url 'collection:questionnaire' case.pk %}">Questionnaire</a>
+            · <a href="{% url 'collection:documents' case.pk %}">Documents</a>
+            · <a href="{% url 'collection:case_hub' case.pk %}">File</a>
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="4">No files yet. Admins can open a file for every county from Variables &amp; settings.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <div class="actions">
+    <a class="btn gold" href="{% url 'collection:questionnaires' %}">Open questionnaires</a>
+    {% if user.is_analyst_role %}
+      <a class="btn" href="{% url 'collection:analysis' %}">Open analysis</a>
+      <a class="btn" href="{% url 'reports:centre' %}">Download reports</a>
+      <a class="btn ghost" href="{% url 'collection:comparators' %}">Comparators</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

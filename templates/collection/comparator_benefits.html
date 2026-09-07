@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} benefits · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'collection:comparators' %}">Comparators</a> / {{ org.name }}{% endblock %}
+{% block heading %}{{ org.name }} — benefits{% endblock %}
+{% block content %}
+<nav class="file-nav" aria-label="Comparator">
+  {% if can_edit %}<a href="{% url 'collection:comparator_edit' org.pk %}">Details</a>{% endif %}
+  <a href="{% url 'collection:comparator_pay' org.pk %}">Pay table</a>
+  <a class="on" href="{% url 'collection:comparator_benefits' org.pk %}">Benefits</a>
+</nav>
+<p class="muted">{{ period }} · Same benefit list as the counties.</p>
+<div class="card">
+  <form method="post" data-dirty-guard>
+    {% csrf_token %}
+    <div class="table-wrap overflow-visible">
+      <table class="data">
+        <thead>
+          <tr><th>Benefit</th><th>Provided</th><th>Interest</th><th>Employer</th><th>Employee</th><th>Eligibility</th><th>Comments</th></tr>
+        </thead>
+        <tbody>
+        {% for benefit, form in rows %}
+          <tr>
+            <td>{{ benefit.name }}{{ form.errors }}</td>
+            <td>{{ form.provided }}</td>
+            <td>{{ form.interest_charged }}</td>
+            <td>{{ form.employer_contribution }}</td>
+            <td>{{ form.employee_contribution }}</td>
+            <td>{{ form.eligibility }}</td>
+            <td>{{ form.comments }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="actions sticky-actions">
+      <button class="btn gold" type="submit" {% if not can_edit %}disabled{% endif %}>Save comparator benefits</button>
+      <a class="btn ghost" href="{% url 'collection:comparators' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}{{ org.name }} · DCollect{% endblock %}
+{% block crumb %}<a href="{% url 'collection:comparators' %}">Comparators</a> / Details{% endblock %}
+{% block heading %}{{ org.name }}{% endblock %}
+{% block content %}
+<nav class="file-nav" aria-label="Comparator">
+  <a class="on" href="{% url 'collection:comparator_edit' org.pk %}">Details</a>
+  <a href="{% url 'collection:comparator_pay' org.pk %}">Pay table</a>
+  <a href="{% url 'collection:comparator_benefits' org.pk %}">Benefits</a>
+</nav>
+<div class="card" style="max-width:640px">
+  <form method="post">
+    {% csrf_token %}
+    {% for field in form %}
+      <div class="field">
+        {% if field.field.widget.input_type == 'checkbox' %}
+          <label>{{ field }} {{ field.label }}</label>
+        {% else %}
+          <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+          {{ field }}
+        {% endif %}
+        {% if field.help_text %}<div class="help">{{ field.help_text }}</div>{% endif %}
+        {{ field.errors }}
+      </div>
+    {% endfor %}
+    <div class="actions">
+      <button class="btn gold" type="submit">Save details</button>
+      <a class="btn ghost" href="{% url 'collection:comparators' %}">Back</a>
+    </div>
+  </form>
+</div>
+{% if can_delete %}
+<div class="card danger-panel" style="max-width:640px" id="delete-comparator">
+  <h2>Delete this comparator</h2>
+  <p class="muted">
+    Removes the organisation and every pay and benefits figure already entered for it.
+    County files are not affected. Analysis will no longer include this comparator.
+  </p>
+  <form method="post" action="{% url 'collection:comparator_delete' org.pk %}" data-confirm="Delete {{ org.name }} and all of its pay and benefits figures?">
+    {% csrf_token %}
+    <div class="field">
+      <label for="id_delete_comparator">Type <span class="mono">{{ org.name }}</span> to confirm</label>
+      <input class="input" id="id_delete_comparator" name="confirm" autocomplete="off">
+    </div>
+    <button class="btn danger" type="submit">Delete comparator</button>
+  </form>
+</div>
+{% endif %}
+{% endblock %}
