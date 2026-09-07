@@ -4,6 +4,20 @@ County Public Service **salary and remuneration survey** platform. Built with Dj
 
 Live (example host): `https://collect.internetcongress.org/`
 
+
+
+## Screenshots
+
+| Sign-in | Dashboard | County overview |
+|:--:|:--:|:--:|
+| ![Sign-in](docs/manual-screens/01-sign-in.jpg) | ![Dashboard](docs/manual-screens/02-dashboard.jpg) | ![County overview](docs/manual-screens/03-county-overview.jpg) |
+
+| Questionnaire | Jobs / pay | Documents |
+|:--:|:--:|:--:|
+| ![Questionnaire](docs/manual-screens/04-questionnaire.jpg) | ![Jobs](docs/manual-screens/05-jobs.jpg) | ![Documents](docs/manual-screens/06-documents.jpg) |
+
+![Reports](docs/manual-screens/07-reports.jpg)
+
 ## Stack
 
 - Python 3.11+
